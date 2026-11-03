@@ -2,7 +2,7 @@
 
 User-visible changes. The build number is what the menu shows after the version.
 
-## Unreleased
+## 1.2.0-beta.1 (build 5), 2026-11-04
 
 ### Added
 

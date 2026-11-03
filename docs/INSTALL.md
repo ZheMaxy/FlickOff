@@ -48,8 +48,7 @@ put in Applications, so uninstall that one first. To remove the app, run
 ## First use and launch at login
 
 The first launch enables **Launch at login** and **Check for updates automatically**,
-selects **Manual, 100%**, and sets **When idle** to **Turn off after 5 min**
-(in Beta 2, the **Don't dim when idle** checkbox is on instead).
+selects **Manual, 100%**, and sets **When idle** to **Turn off after 5 min**.
 Lower the brightness to a comfortable stable
 level, or choose **Off** to keep the Touch Bar display dark.
 0% is minimum lit brightness, not Off. Touch ID remains available.

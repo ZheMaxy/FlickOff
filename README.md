@@ -80,9 +80,6 @@ what to do about hardware service.
 | **When idle: Let macOS dim it** | Leaves idling to macOS, which can bring the flicker back. |
 | **Launch at login** | Enabled on first launch; starts the app after login to reapply saved settings. |
 
-**When idle** and the menu shown above arrive with the next release. Beta 2 has a
-**Don't dim when idle** checkbox instead, which works like **Stay lit**.
-
 First launch selects **Manual, 100%** and **Turn off after 5 min**, with launch
 at login enabled. macOS may request login-item approval. Updates preserve your
 choice if you turn launch at login off, and an installation from before **When
