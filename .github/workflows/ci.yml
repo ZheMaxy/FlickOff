@@ -10,6 +10,9 @@ on:
     paths-ignore:
       - '**/*.md'
       - appcast.xml
+  schedule:
+    # A new runner image can change the private APIs the app depends on, with no commit to trigger a run.
+    - cron: '17 6 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +20,7 @@ permissions:
 
 jobs:
   macos:
+    if: github.event_name != 'schedule'
     # Explicit Intel pool avoids the capacity-limited macOS arm64 queue.
     runs-on: macos-15-intel
     timeout-minutes: 20
@@ -24,6 +28,8 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Toolchain
+        run: swift --version
       - name: Native tests, bundle and read-only smoke checks
         env:
           TB_BUILD_ARCH: x86_64
@@ -37,5 +43,27 @@ jobs:
       - name: Check integration-test sources without hardware writes
         run: |
           python3 -m py_compile Tests/Integration/*.py scripts/*.py
+          python3 Tests/Integration/release_checks_test.py
           xcrun clang -fsyntax-only -fobjc-arc -I Sources/TBPrivate/include Tests/Integration/PanelProbe.m
           xcrun clang -fsyntax-only -fobjc-arc -F build/FlickOff.app/Contents/Frameworks Tests/Integration/UpdateProbe.m
+
+  # What ships is arm64 and the app depends on private APIs, but this queue has been too limited to
+  # hold up every push. Read-only: the runners have no Touch Bar and hardware tests stay off.
+  native-arm64:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: swift --version
+      - name: Native arm64 tests and the private API contract
+        env:
+          TB_API_TESTS: '1'
+        run: ./build.sh test

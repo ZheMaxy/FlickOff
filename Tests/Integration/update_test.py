@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Verify signed feed discovery, tamper rejection and Sparkle installation in temp copies."""
+import argparse
 from functools import partial
 import http.server
 from pathlib import Path
 import plistlib
+import shlex
 import subprocess
 import tempfile
 import threading
@@ -25,7 +27,17 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+def as_root(script):
+    """Runs a shell script through the standard administrator prompt, which a person must answer."""
+    quoted = script.replace('\\', '\\\\').replace('"', '\\"')
+    run('osascript', '-e', f'do shell script "{quoted}" with administrator privileges', timeout=180)
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root-owned', action='store_true',
+                        help='Update a copy owned by root, as the installer leaves it. Asks for an administrator three times.')
+    args = parser.parse_args()
     app = ROOT / 'build/FlickOff.app'
     current_info = plistlib.loads((app / 'Contents/Info.plist').read_bytes())
     current_build = current_info['CFBundleVersion']
@@ -70,6 +82,28 @@ def main():
             return older, case / 'release'
 
         try:
+            if args.root_owned:
+                older, release = fixture('root-owned')
+                parent = shlex.quote(str(older.parent))
+                as_root(f'/usr/sbin/chown -R root:wheel {parent}')
+                try:
+                    # Sparkle asks for the administrator itself while the probe waits.
+                    r = run(probe, older, 'install-privileged', check=False, timeout=200)
+                    deadline = time.monotonic() + 20
+                    while time.monotonic() < deadline:
+                        installed = plistlib.loads((older / 'Contents/Info.plist').read_bytes())
+                        if installed['CFBundleVersion'] == current_build:
+                            break
+                        time.sleep(0.2)
+                    else:
+                        raise AssertionError('Update did not install: ' + r.stdout + r.stderr)
+                    run('codesign', '--verify', '--deep', '--strict', older)
+                    assert older.stat().st_uid == 0, 'the update changed who owns the app'
+                    print('PASS: Sparkle updates a root-owned app after administrator approval', flush=True)
+                finally:
+                    as_root(f'/bin/rm -rf {parent}')
+                return
+
             older, release = fixture('discovery')
             r = run(probe, older, 'probe')
             assert 'FOUND ' + current_build in r.stdout, r.stdout + r.stderr

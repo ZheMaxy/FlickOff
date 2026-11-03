@@ -141,7 +141,8 @@ final class Harness {
     let touchBar = FakeTouchBar()
     let system = FakeSystemState()
     let loginItem = FakeLoginItem()
-    let defaults: UserDefaults
+    // Also read from deinit, when nothing else can reach it.
+    nonisolated(unsafe) let defaults: UserDefaults
     private let suiteName = "TouchBarKitTests.\(UUID().uuidString)"
 
     init(settings: [String: Any] = [:]) {

@@ -3,16 +3,22 @@ import Combine
 import Testing
 @testable import TouchBarKit
 
+/// A system service that a test brings up partway through.
+@MainActor
+private final class FakeService {
+    var isUp = false
+}
+
 @Suite("Reconnecting after a failed launch check")
 @MainActor
 struct ReconnectTests {
     @Test func serviceThatComesUpAfterLoginIsPickedUp() {
         let h = Harness()
         var attempts = 0
-        var serviceIsUp = false
+        let service = FakeService()
         let c = h.makeController(compatibility: .failing(at: "control"), reconnect: {
             attempts += 1
-            return serviceIsUp ? (h.touchBar, .supported) : (nil, .failing(at: "control"))
+            return service.isUp ? (h.touchBar, .supported) : (nil, .failing(at: "control"))
         })
         c.start()
         #expect(c.touchBar == nil)
@@ -23,7 +29,7 @@ struct ReconnectTests {
         #expect(c.touchBar == nil)
         #expect(c.compatibility.problem == .controlDenied)
 
-        serviceIsUp = true
+        service.isUp = true
         c.reconnectTimerFired()
         #expect(c.touchBar != nil)
         #expect(c.compatibility.isSupported)
@@ -61,14 +67,14 @@ struct ReconnectTests {
 
     @Test func wakingTheMacTriesAgainAfterGivingUp() {
         let h = Harness()
-        var serviceIsUp = false
+        let service = FakeService()
         let c = h.makeController(compatibility: .failing(at: "control"), reconnect: {
-            serviceIsUp ? (h.touchBar, .supported) : (nil, .failing(at: "control"))
+            service.isUp ? (h.touchBar, .supported) : (nil, .failing(at: "control"))
         })
         c.start()
         while c.reconnectIsScheduled { c.reconnectTimerFired() }
 
-        serviceIsUp = true
+        service.isUp = true
         c.systemDidWake()
         #expect(c.touchBar != nil)
         c.prepareForQuit()

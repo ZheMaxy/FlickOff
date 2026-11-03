@@ -11,6 +11,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+ROOT = Path(__file__).resolve().parents[1]
 SPARKLE = 'http://www.andymatuschak.org/xml-namespaces/sparkle'
 ET.register_namespace('sparkle', SPARKLE)
 
@@ -19,17 +20,43 @@ def run(*args):
     return subprocess.run([str(a) for a in args], check=True, capture_output=True, text=True).stdout
 
 
+def published_build(feed):
+    """The newest build in the feed users read now; Sparkle ignores anything that isn't newer."""
+    versions = ET.parse(feed).getroot().iter(f'{{{SPARKLE}}}version')
+    return max((int(version.text) for version in versions), default=0)
+
+
+def release_problems(tag, version, build, notes, published):
+    """Mistakes that would ship a release users can't get or can't tell apart."""
+    problems = []
+    if not re.fullmatch(rf'v{re.escape(version)}(-(alpha|beta|rc)\.[0-9]+)?', tag):
+        problems.append(f'Tag {tag} does not match version {version}')
+    if not build.isascii() or not build.isdecimal() or int(build) <= published:
+        problems.append(f'Build {build} must be higher than the published build {published}')
+    if notes is None or not notes.strip():
+        problems.append('Pass --notes with a file saying what changed; the update alert shows it')
+    return problems
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--app', type=Path, default=Path('build/FlickOff.app'))
     parser.add_argument('--tag', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--notes', type=Path, help='Plain-text file saying what changed; the update alert shows it')
     parser.add_argument('--download-prefix')
     parser.add_argument('--key-account', default='io.github.ZheMaxy.FlickOff')
     parser.add_argument('--archive-only', action='store_true', help='Skip the native installer for isolated updater fixtures')
     args = parser.parse_args()
     info = plistlib.loads((args.app / 'Contents/Info.plist').read_bytes())
     version, build = info['CFBundleShortVersionString'], info['CFBundleVersion']
+    notes = args.notes.read_text() if args.notes else None
+    if args.archive_only:
+        notes = 'Updater test fixture.'
+    else:
+        problems = release_problems(args.tag, version, build, notes, published_build(ROOT / 'appcast.xml'))
+        if problems:
+            raise SystemExit('\n'.join(problems))
     if run('lipo', '-archs', args.app / 'Contents/MacOS/FlickOff').strip() != 'arm64':
         raise SystemExit('Only native arm64 release archives are allowed')
     run('codesign', '--verify', '--deep', '--strict', args.app)
@@ -59,7 +86,7 @@ def main():
     ET.SubElement(item, f'{{{SPARKLE}}}shortVersionString').text = version
     ET.SubElement(item, f'{{{SPARKLE}}}minimumSystemVersion').text = info['LSMinimumSystemVersion'] + '.0'
     ET.SubElement(item, f'{{{SPARKLE}}}hardwareRequirements').text = 'arm64'
-    ET.SubElement(item, 'description').text = 'Keep your Mac. Lose the flicker. Manual brightness, Off mode and signed in-app updates.'
+    ET.SubElement(item, 'description', {f'{{{SPARKLE}}}format': 'plain-text'}).text = notes.strip()
     ET.SubElement(item, 'enclosure', {
         'url': prefix.rstrip('/') + '/' + archive.name,
         f'{{{SPARKLE}}}edSignature': signature.group(1),

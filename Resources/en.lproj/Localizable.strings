@@ -19,7 +19,7 @@
 "idle.stayLit.note" = "Keeping it lit speeds up OLED burn-in.";
 /* %ld = minutes */
 "idle.offAfter" = "Turn off after %ld min";
-"idle.offAfter.note" = "Skips the dim range and spares the OLED. Using the Mac or touching the bar lights it again.";
+"idle.offAfter.note" = "Skips the dim range and spares the OLED. Using the Mac lights it again.";
 
 "launchAtLogin" = "Launch at login";
 "quit" = "Quit";

@@ -23,7 +23,7 @@ let package = Package(
             dependencies: ["TouchBarKit", .product(name: "Sparkle", package: "Sparkle")],
             linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]
         ),
-        .testTarget(name: "TouchBarKitTests", dependencies: ["TouchBarKit", "TBPrivate"]),
+        .testTarget(name: "TouchBarKitTests", dependencies: ["TouchBarKit", "TBPrivate"], swiftSettings: [.swiftLanguageMode(.v6)]),
     ],
     swiftLanguageModes: [.v5]
 )

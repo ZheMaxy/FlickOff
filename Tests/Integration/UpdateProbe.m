@@ -55,9 +55,11 @@ int main(int argc, const char *argv[]) {
         probe.updater = [[SPUUpdater alloc] initWithHostBundle:host applicationBundle:host userDriver:probe delegate:probe];
         NSError *error = nil;
         if (![probe.updater startUpdater:&error]) { fprintf(stderr, "%s\n", error.description.UTF8String); return 1; }
-        if ([probe.mode isEqual:@"install"] || [probe.mode isEqual:@"reject-archive"]) [probe.updater checkForUpdates];
+        BOOL privileged = [probe.mode isEqual:@"install-privileged"];
+        if (privileged || [probe.mode isEqual:@"install"] || [probe.mode isEqual:@"reject-archive"]) [probe.updater checkForUpdates];
         else [probe.updater checkForUpdateInformation];
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 45*NSEC_PER_SEC), dispatch_get_main_queue(), ^{ fputs("Update probe timed out\n", stderr); exit(3); });
+        // A person answers the administrator prompt in the privileged case.
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (privileged ? 180 : 45)*NSEC_PER_SEC), dispatch_get_main_queue(), ^{ fputs("Update probe timed out\n", stderr); exit(3); });
         [NSApp run];
     }
     return 0;
