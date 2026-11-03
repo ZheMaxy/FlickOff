@@ -60,6 +60,24 @@ installed app or exercise its Touch Bar controller.
 Reproduce with `python3 Tests/Integration/update_test.py`. This requires the
 owner's release-signing key in Keychain and is not run in hosted CI.
 
+## Native installer
+
+Five local installer checks passed: signed app-only package payload and native
+helpers; system requirements and upgrade metadata; isolated install/upgrade and
+rejection guards; launching in the console user's session after dropping root;
+and mounting the disk image to verify the native installer and embedded package.
+These checks also run in CI without installation or administrator access.
+
+The native installer was then used on this Mac to replace an existing copy.
+It preserved brightness/mode/preferences and opened build 4 automatically as
+the console user, UID 501. Login-item status was enabled with no setup issues,
+and automatic update checking was enabled. The inline license screen and
+Agree and Install action were reviewed during this test. No Installer GUI
+plugins are included.
+
+This verifies registration state and immediate launch; an actual logout/login
+cycle has not been performed.
+
 ## What this does not establish
 
 API return values and reported state do not measure visible light output. These

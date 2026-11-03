@@ -46,3 +46,21 @@ archive validation and installation in isolated temporary bundles. It requires
 the release owner's Keychain signing key; it does not operate the installed app
 or Touch Bar. Each case uses a fresh identity so installer recovery state from a
 negative case cannot affect a later successful installation.
+
+## Installer
+
+```sh
+python3 scripts/make_installer.py --output build/installer-check
+python3 Tests/Integration/installer_test.py --pkg build/installer-check/*.pkg --dmg build/installer-check/*.dmg
+```
+
+These checks expand the package, verify app/framework signatures and native
+architecture, evaluate Installer requirements without installing, and execute
+upgrade guards against isolated fixtures. Postinstall launch routing is checked
+with stubbed system commands. The disk image is mounted read-only and the native
+installer's read-only self-test is run. No administrator access or panel writes
+are involved. CI performs these checks with its separate native Intel identity.
+
+Actual installation and its administrator prompt require a coordinated local
+test. Verify the existing app quits, settings survive replacement, FlickOff
+opens as the console user, and login/update preferences retain their values.

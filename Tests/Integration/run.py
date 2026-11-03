@@ -102,7 +102,8 @@ def main():
             nonlocal active
             before = state()
             fixture = dict(saved_preferences or {})
-            fixture.update(mode=mode, level=float(level), preventDimming=prevent, loginItemConfigured=True)
+            fixture.update(mode=mode, level=float(level), preventDimming=prevent,
+                           loginItemConfigured=True, SUEnableAutomaticChecks=False)
             fixture_path = temp / "fixture.plist"
             fixture_path.write_bytes(plistlib.dumps(fixture))
             run("defaults", "import", DOMAIN, fixture_path)

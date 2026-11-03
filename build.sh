@@ -2,7 +2,7 @@
 # Builds FlickOff.app from the Swift package.
 #   ./build.sh            unit tests, release build -> build/FlickOff.app, self-test
 #   ./build.sh test       unit tests only (hardware tests: TB_HARDWARE_TESTS=1 ./build.sh test)
-#   ./build.sh install    unit tests, build, copy to /Applications, self-test, relaunch
+#   ./build.sh install    unit tests, build, open the native installer
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -84,19 +84,11 @@ smoke_test() {
 }
 
 install_app() {
-    local stage
-    stage="$(mktemp -d /Applications/.FlickOff.XXXXXX)"
-    if ! ditto "$APP" "$stage/FlickOff.app"; then
-        rm -rf "$stage"
-        return 1
-    fi
-    pkill -x FlickOff 2>/dev/null && sleep 1 || true
-    rm -rf /Applications/FlickOff.app
-    mv "$stage/FlickOff.app" /Applications/
-    rmdir "$stage"
-    self_test /Applications/FlickOff.app
-    open /Applications/FlickOff.app
-    echo "installed /Applications/FlickOff.app"
+    local output
+    output="$(mktemp -d "$PWD/build/installer.XXXXXX")"
+    python3 scripts/make_installer.py --app "$APP" --output "$output"
+    open "$output/Install FlickOff.app"
+    echo "Installer opened. Choose Agree and Install to complete installation."
 }
 
 case "${1:-}" in

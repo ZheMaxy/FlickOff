@@ -30,16 +30,19 @@ above. Check current Apple distribution requirements before changing signing.
 Use the signed updater package for both direct downloads and in-app updates:
 
 ```sh
-python3 scripts/make_release.py --tag v1.1.0-beta.1 --output build/release-1.1.0-beta.1
+python3 scripts/make_release.py --tag v1.1.0-beta.2 --output build/release-1.1.0-beta.2
 ```
 
-The output directory must not already contain an archive. The app-only ZIP
+The output directory must not already contain an archive. The DMG with the
+native installer app is the primary download; validate its license screen,
+administrator authorization and upgrade behaviour before release.
+The app-only ZIP
 preserves framework symlinks and includes license notices inside the app's
 Resources. The script verifies the native architecture and code signature,
 signs the archive and appcast with the owner's Keychain key, verifies both
 signatures, and writes SHA256SUMS. See [update publishing](UPDATES.md).
 
-Upload the ZIP and SHA256SUMS as assets of the matching GitHub Release. Publish
+Upload the DMG, ZIP and SHA256SUMS as assets of the matching GitHub Release. Publish
 the generated appcast.xml unchanged at the repository root once its download
 URL works. Do not add loose files alongside the app inside the updater ZIP.
 Download the published archive/feed and verify their checksum and signatures.

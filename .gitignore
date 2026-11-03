@@ -31,6 +31,9 @@ nodes.json
 *.tar
 *.tar.gz
 *.zip
+*.dmg
+*.pkg
+*.scpt
 
 # --- build / OS / editor ---
 .DS_Store

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Installer runs as root; launch the app in the logged-in user's GUI session.
+set -eu
+
+if [ "${3:-}" != / ]; then
+    echo 'FlickOff launch skipped: the target is not the startup disk.' >&2
+    exit 0
+fi
+console_uid=$(/usr/bin/stat -f %u /dev/console 2>/dev/null || true)
+case "$console_uid" in
+    ''|*[!0-9]*) exit 0 ;;
+esac
+if [ "$console_uid" -lt 500 ]; then
+    # No regular user is at the console, for example during managed deployment.
+    exit 0
+fi
+
+if ! /bin/launchctl asuser "$console_uid" /usr/bin/sudo -u "#$console_uid" \
+    /usr/bin/open -g /Applications/FlickOff.app; then
+    echo 'FlickOff installed. Open it from Applications to start it.' >&2
+fi
+exit 0

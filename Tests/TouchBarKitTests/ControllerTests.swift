@@ -203,8 +203,10 @@ struct PanelStateTests {
 struct LoginItemTests {
     @Test func registersOnlyOnFirstLaunch() {
         let h = Harness()
-        h.makeController().configureLoginItemOnFirstLaunch()
+        let first = h.makeController()
+        first.configureLoginItemOnFirstLaunch()
         #expect(h.loginItem.registerCount == 1)
+        #expect(first.launchAtLogin)
 
         // The user turned it off; a relaunch must not turn it back on.
         h.makeController().setLaunchAtLogin(false)

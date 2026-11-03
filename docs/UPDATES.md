@@ -1,7 +1,7 @@
 # Software update publishing
 
 FlickOff embeds Sparkle 2.10.1. Users can check from the menu or opt into periodic
-checks. Automatic checking is disabled by default; installation uses Sparkle's
+checks. Automatic checking is enabled by default; installation uses Sparkle's
 standard UI. System profiling is disabled.
 
 The production feed is:
@@ -23,15 +23,19 @@ into the repository or place it in command arguments.
 3. Create a fresh output directory and run:
 
 ```sh
-python3 scripts/make_release.py --tag v1.1.0-beta.1 --output build/release-1.1.0
+python3 scripts/make_release.py --tag v1.1.0-beta.2 --output build/release-1.1.0-beta.2
 ```
 
-The script makes an app-only ZIP with framework symlinks preserved, signs the
-archive, generates and signs appcast.xml, verifies both signatures, and writes
-SHA256SUMS. It reads the private key directly from Keychain through Sparkle's
+The script makes an app-only ZIP for Sparkle and a disk image with a native
+installer app for first installation. The installer embeds a system package.
+The script preserves framework symlinks, signs the ZIP, generates and
+signs appcast.xml, verifies both signatures, and writes SHA256SUMS for the ZIP
+and installer. It reads the private key directly from Keychain through Sparkle's
 pinned signing tool. macOS may ask you to authorize that tool's key access.
 
-4. Upload the ZIP and SHA256SUMS to the matching GitHub Release. Verify the asset
+4. Validate the package and image with `Tests/Integration/installer_test.py` as
+   described in the integration README. Upload the DMG, ZIP and SHA256SUMS
+   to the matching GitHub Release. Verify the asset
    URL is available, then copy the generated appcast.xml unchanged to the repo
    root and publish it. Byte changes to the feed require re-signing it.
 5. Download the published archive/feed and verify their signatures and checksum.
@@ -41,6 +45,14 @@ pinned signing tool. macOS may ask you to authorize that tool's key access.
 The ZIP used for updates contains only FlickOff.app. License and dependency
 notices are embedded in the app's Resources. Extra loose files can interfere
 with app translocation and update discovery.
+
+The installer displays the license inline; **Agree and Install** starts the
+system package installation through the standard administrator authorization.
+It uses no Installer GUI plugins. The native installer stops matching app copies, replaces only the app in
+Applications, preserves user preferences and starts it in the console user's
+GUI session. It never runs FlickOff as root. If no user is logged in, launching
+is deferred to a user's manual first launch. Launch at login is enabled on that
+first launch; an existing opt-out survives updates.
 
 ## Reproducible local updater test
 

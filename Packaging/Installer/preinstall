@@ -1,0 +1,56 @@
+#!/bin/sh
+# The package manager replaces only this app bundle; preferences stay untouched.
+set -eu
+
+incoming_build='@BUILD@'
+expected_id='@BUNDLE_ID@'
+volume="${3:-}"
+if [ "$volume" != / ]; then
+    echo 'FlickOff must be installed on the current startup disk.' >&2
+    exit 1
+fi
+app=/Applications/FlickOff.app
+if [ -L "$app" ]; then
+    echo 'The FlickOff installation path is a symbolic link. Installation stopped.' >&2
+    exit 1
+fi
+if [ -e "$app" ]; then
+    identifier=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist" 2>/dev/null || true)
+    if [ "$identifier" != "$expected_id" ]; then
+        echo 'Another app occupies /Applications/FlickOff.app. Installation stopped.' >&2
+        exit 1
+    fi
+    installed_build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Contents/Info.plist" 2>/dev/null || true)
+    case "$installed_build" in
+        ''|*[!0-9]*) echo 'Cannot read the installed app version. Installation stopped.' >&2; exit 1 ;;
+    esac
+    if [ "${#installed_build}" -gt 9 ] || [ "$installed_build" -gt "$incoming_build" ]; then
+        echo 'A newer FlickOff is already installed. Use Check for Updates in the app.' >&2
+        exit 1
+    fi
+fi
+
+# Use executable paths, never process arguments, and signal only this app identity.
+for pid in $(/usr/bin/pgrep -x FlickOff || true); do
+    executable=$(/bin/ps -p "$pid" -o comm= 2>/dev/null || true)
+    case "$executable" in
+        */FlickOff.app/Contents/MacOS/FlickOff) ;;
+        *) continue ;;
+    esac
+    running_bundle=${executable%/Contents/MacOS/FlickOff}
+    running_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$running_bundle/Contents/Info.plist" 2>/dev/null || true)
+    if [ "$running_id" != "$expected_id" ]; then
+        continue
+    fi
+    /bin/kill -TERM "$pid" 2>/dev/null || true
+    attempts=0
+    while /bin/kill -0 "$pid" 2>/dev/null; do
+        attempts=$((attempts + 1))
+        if [ "$attempts" -ge 40 ]; then
+            echo 'FlickOff did not quit. Installation stopped without replacing it.' >&2
+            exit 1
+        fi
+        /bin/sleep 0.25
+    done
+done
+exit 0

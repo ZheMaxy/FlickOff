@@ -8,6 +8,7 @@ from pathlib import Path
 import plistlib
 import re
 import subprocess
+import sys
 import xml.etree.ElementTree as ET
 
 SPARKLE = 'http://www.andymatuschak.org/xml-namespaces/sparkle'
@@ -25,6 +26,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--download-prefix')
     parser.add_argument('--key-account', default='io.github.ZheMaxy.FlickOff')
+    parser.add_argument('--archive-only', action='store_true', help='Skip the native installer for isolated updater fixtures')
     args = parser.parse_args()
     info = plistlib.loads((args.app / 'Contents/Info.plist').read_bytes())
     version, build = info['CFBundleShortVersionString'], info['CFBundleVersion']
@@ -51,7 +53,7 @@ def main():
     ET.SubElement(channel, 'link').text = 'https://github.com/ZheMaxy/FlickOff'
     ET.SubElement(channel, 'description').text = 'Signed FlickOff software updates'
     item = ET.SubElement(channel, 'item')
-    ET.SubElement(item, 'title').text = f'FlickOff {version}'
+    ET.SubElement(item, 'title').text = f'FlickOff {version} (build {build})'
     ET.SubElement(item, 'pubDate').text = format_datetime(datetime.now(timezone.utc))
     ET.SubElement(item, f'{{{SPARKLE}}}version').text = build
     ET.SubElement(item, f'{{{SPARKLE}}}shortVersionString').text = version
@@ -68,10 +70,16 @@ def main():
     ET.ElementTree(rss).write(feed, encoding='utf-8', xml_declaration=True)
     run(signer, '--account', args.key_account, feed)
     run(signer, '--account', args.key_account, '--verify', feed)
-    checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
-    (args.output / 'SHA256SUMS').write_text(f'{checksum}  {archive.name}\n')
+    artifacts = [archive]
+    if not args.archive_only:
+        run(sys.executable, Path(__file__).with_name('make_installer.py'), '--app', args.app, '--output', args.output)
+        artifacts.append(args.output / f'FlickOff-{version}-arm64.dmg')
+    checksums = ''.join(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n' for path in artifacts)
+    (args.output / 'SHA256SUMS').write_text(checksums)
     print(f'Signed archive: {archive}')
     print(f'Signed appcast: {feed}')
+    for artifact in artifacts[1:]:
+        print(f'Native installer: {artifact}')
     print('Archive and feed signatures verified; signing key stayed in Keychain.')
 
 

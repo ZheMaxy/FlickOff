@@ -27,6 +27,10 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
 
 def main():
     app = ROOT / 'build/FlickOff.app'
+    current_info = plistlib.loads((app / 'Contents/Info.plist').read_bytes())
+    current_build = current_info['CFBundleVersion']
+    old_build = str(int(current_build) - 1)
+    current_version = current_info['CFBundleShortVersionString']
     framework = app / 'Contents/Frameworks'
     signer = ROOT / '.build/artifacts/sparkle/Sparkle/bin/sign_update'
     account = 'io.github.ZheMaxy.FlickOff'
@@ -53,21 +57,22 @@ def main():
             info = plistlib.loads(info_path.read_bytes())
             info['CFBundleIdentifier'] = test_id
             info['SUFeedURL'] = prefix + '/appcast.xml'
+            info['SUEnableAutomaticChecks'] = False
             info['NSAppTransportSecurity'] = {'NSAllowsLocalNetworking': True}
             info_path.write_bytes(plistlib.dumps(info, sort_keys=False))
             run('codesign', '--force', '--sign', '-', newer)
             run('ditto', newer, older)
-            older_info = dict(info, CFBundleVersion='2', CFBundleShortVersionString='1.0.0')
+            older_info = dict(info, CFBundleVersion=old_build, CFBundleShortVersionString='1.0.0')
             (older / 'Contents/Info.plist').write_bytes(plistlib.dumps(older_info, sort_keys=False))
             run('codesign', '--force', '--sign', '-', older)
-            run('python3', ROOT / 'scripts/make_release.py', '--app', newer, '--tag', 'test',
+            run('python3', ROOT / 'scripts/make_release.py', '--archive-only', '--app', newer, '--tag', 'test',
                 '--output', case / 'release', '--download-prefix', prefix, timeout=90)
             return older, case / 'release'
 
         try:
             older, release = fixture('discovery')
             r = run(probe, older, 'probe')
-            assert 'FOUND 3' in r.stdout, r.stdout + r.stderr
+            assert 'FOUND ' + current_build in r.stdout, r.stdout + r.stderr
             print('PASS: Sparkle discovers a newer build from a valid signed feed', flush=True)
 
             older, release = fixture('feed')
@@ -78,13 +83,13 @@ def main():
             print('PASS: Sparkle rejects a tampered feed', flush=True)
 
             older, release = fixture('archive')
-            archive = release / 'FlickOff-1.1.0-arm64.zip'
+            archive = release / f'FlickOff-{current_version}-arm64.zip'
             damaged = bytearray(archive.read_bytes())
             damaged[len(damaged)//2] ^= 1
             archive.write_bytes(damaged)
             r = run(probe, older, 'reject-archive')
             assert 'REJECTED_SIGNATURE' in r.stdout, r.stdout + r.stderr
-            assert plistlib.loads((older / 'Contents/Info.plist').read_bytes())['CFBundleVersion'] == '2'
+            assert plistlib.loads((older / 'Contents/Info.plist').read_bytes())['CFBundleVersion'] == old_build
             print('PASS: Sparkle rejects a tampered archive before installing it', flush=True)
 
             older, release = fixture('install')
@@ -92,7 +97,7 @@ def main():
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline:
                 installed = plistlib.loads((older / 'Contents/Info.plist').read_bytes())
-                if installed['CFBundleVersion'] == '3':
+                if installed['CFBundleVersion'] == current_build:
                     break
                 time.sleep(0.2)
             else:

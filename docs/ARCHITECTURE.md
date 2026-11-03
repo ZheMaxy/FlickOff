@@ -7,6 +7,7 @@
 | `Sources/FlickOff` | SwiftUI menu, AppKit diagnostic window and CLI diagnostics |
 | `Resources` | App metadata and English strings; translations go in `<lang>.lproj` |
 | `Tests/TouchBarKitTests` | Fakes, regression tests and opt-in live API/hardware checks |
+| `Packaging/Installer` | Native AppKit installer, inline license and package lifecycle scripts |
 
 The controller applies settings at startup and wake, checks panel state every
 0.5 seconds and reapplies brightness every 5 seconds if it has drifted. Mutable
@@ -57,3 +58,22 @@ main executable is arm64-only. `SUVerifyUpdateBeforeExtraction` and
 `SURequireSignedFeed` require authenticated archives and feed metadata.
 `SUEnableSystemProfiling` is false. The owner's signing key is kept in macOS
 Keychain; only its public key is in Info.plist.
+
+## Installation
+
+`scripts/make_installer.py` creates a disk image containing Install FlickOff.app.
+The AppKit window presents the license and one Agree and Install action. Its
+unprivileged process passes the embedded package path as an AppleScript argument;
+the quoted path is used with the system `installer` command and administrator
+authorization. No credentials are stored or put in command arguments.
+
+The package installs only `/Applications/FlickOff.app`. Its preinstall script
+rejects downgrades and conflicting identities, then sends SIGTERM to matching
+app copies so settings are restored before replacement. Package upgrade metadata
+replaces the app bundle and removes stale files while leaving preferences alone.
+The postinstall script selects the console user's session and drops root before
+opening FlickOff. It skips launching when nobody is logged in.
+
+The app enables launch at login on first launch from Applications and defaults
+automatic update checks to on. Existing opt-outs are preserved. In-app updates
+use the signed app-only ZIP rather than the installer disk image.

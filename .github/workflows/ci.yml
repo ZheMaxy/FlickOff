@@ -2,7 +2,14 @@ name: Build and test
 
 on:
   push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - appcast.xml
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - appcast.xml
   workflow_dispatch:
 
 permissions:
@@ -23,6 +30,10 @@ jobs:
         run: ./build.sh
       - name: Cross-compile the arm64 release target
         run: swift build -c release --arch arm64 -debug-info-format none
+      - name: Build and validate the native installer without installing
+        run: |
+          python3 scripts/make_installer.py --output build/installer-ci
+          python3 Tests/Integration/installer_test.py --pkg build/installer-ci/*.pkg --dmg build/installer-ci/*.dmg
       - name: Check integration-test sources without hardware writes
         run: |
           python3 -m py_compile Tests/Integration/*.py scripts/*.py

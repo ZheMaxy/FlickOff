@@ -35,12 +35,16 @@ what to do about hardware service.
 
 ## Download FlickOff for Apple silicon Macs
 
-[Download the Apple silicon beta](https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.1/FlickOff-1.1.0-arm64.zip)
+[Download the macOS installer (.dmg)](https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-1.1.0-arm64.dmg)
 or [browse all releases](https://github.com/ZheMaxy/FlickOff/releases).
-Unzip, move **FlickOff.app** into Applications, then open it.
+Open the disk image, open **Install FlickOff**, and choose **Agree and Install**.
+It installs FlickOff in
+Applications, upgrades an existing copy, and keeps your settings. FlickOff
+starts automatically and appears in the menu bar.
 
 This first public beta is tested on an M1 MacBook Pro with macOS 27.2. It is
-ad-hoc signed and not notarized; downloaded copies may need the
+not notarized; the installer app and FlickOff are ad-hoc signed. If macOS
+blocks the download, follow the
 [Gatekeeper steps](docs/INSTALL.md). Noncommercial use is free; commercial use
 requires a [paid license](COMMERCIAL.md).
 
@@ -52,9 +56,11 @@ requires a [paid license](COMMERCIAL.md).
 | **Auto** | Returns brightness control to macOS. Idle dimming is controlled separately by the checkbox. |
 | **Off** | Keeps the Touch Bar display dark while the app runs. Does not disable touch input or Touch ID. |
 | **Don't dim when idle** | Prevents idle dimming and idle display power-off while the Mac is awake, unlocked and open. |
-| **Launch at login** | Starts the app after login to reapply saved settings. |
+| **Launch at login** | Enabled on first launch; starts the app after login to reapply saved settings. |
 
-First launch selects **Manual, 100%**, with idle dimming prevention enabled.
+First launch selects **Manual, 100%**, with idle dimming prevention and launch
+at login enabled. macOS may request login-item approval. Updates preserve your
+choice if you turn launch at login off.
 **0% is the panel's minimum lit brightness, not Off.** Slider nits are estimated
 from the reported panel range; the header shows reported physical output.
 
@@ -137,7 +143,7 @@ build machine without a Touch Bar.
 
 ```sh
 ./build.sh test       # automated tests; no brightness/panel changes
-./build.sh install    # build, replace the app in /Applications, relaunch
+./build.sh install    # build and open the native installer
 ```
 
 For a managed environment reporting `sandbox_apply: Operation not permitted`,
@@ -154,8 +160,8 @@ Local builds are ad-hoc signed, not Developer ID signed or notarized. See
 
 ## In-app updates
 
-Use **Check for Updates…** in the menu. Enable **Check for updates automatically**
-if you want periodic checks; it is off by default. Sparkle downloads updates and
+Use **Check for Updates…** in the menu. **Check for updates automatically** is
+enabled by default and can be switched off. Sparkle downloads updates and
 handles installation from inside the app. Archives and the update feed are
 Ed25519 signed and verified before installation. Update checks contact GitHub;
 system profiling is disabled. The private signing key is never shipped.

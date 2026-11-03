@@ -1,74 +1,79 @@
 # Install FlickOff — Touch Bar brightness control for macOS
 
-You need an Apple silicon MacBook Pro with a Touch Bar. The build target is
-macOS 13+, but only the M1 model has been used to validate the original hardware
-behaviour. The app checks private API compatibility on every launch.
+FlickOff requires an Apple silicon MacBook Pro with a Touch Bar and macOS 13
+or later. The M1 13-inch model has been tested on macOS 27.2;
+see the [compatibility table](../README.md) for current evidence.
 
-FlickOff controls the Touch Bar display separately from the main screen. See
-the [brightness controls and flickering FAQ](../README.md) before choosing
-Manual or Off.
+## Install FlickOff
 
-## Download
+1. [Download FlickOff-1.1.0-arm64.dmg](https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-1.1.0-arm64.dmg).
+2. Open the disk image and double-click **Install FlickOff**. Review the license
+   in that window and click **Agree and Install**. Confirm the macOS
+   administrator prompt.
+3. When installation finishes, FlickOff opens automatically. Find its icon
+   in the **menu bar**; it does not appear in the Dock.
 
-Get the arm64 archive from [GitHub Releases](https://github.com/ZheMaxy/FlickOff/releases).
-Expand it and move FlickOff.app into Applications before opening it. Keep only
-one active copy. The archive contains the app, including its license notices.
+The installer puts the app in `/Applications/FlickOff.app`. If an existing FlickOff
+is running, the installer closes it safely, replaces the app and starts the
+installed copy. Your brightness settings and preferences are kept.
 
-## Build from source
+If the icon is not visible, press **Command–Space**, type **FlickOff**, and press
+Return. The app itself does not need administrator access to control brightness.
 
-Install Xcode or Command Line Tools with Swift 6.0+, then run `./build.sh` in the
-repository. The result is `build/FlickOff.app`. No administrator access
-is needed to build or to control brightness.
+## First use and launch at login
 
-## Install
+The first launch enables **Launch at login** and **Check for updates automatically**,
+selects **Manual, 100%**, and enables **Don't dim when idle**.
+Lower the brightness to a comfortable stable
+level, or choose **Off** to keep the Touch Bar display dark.
+0% is minimum lit brightness, not Off. Touch ID remains available.
 
-1. Quit any running copy of FlickOff.
-2. Move `FlickOff.app` to `/Applications` or `~/Applications`.
-3. Open it from that folder. It appears in the menu bar, without a Dock icon.
-4. Select **Manual** and start with higher brightness if low levels flicker.
-   Alternatively, choose **Off** to keep the display dark.
+macOS may ask you to approve the login item in **System Settings → General →
+Login Items**. The app shows guidance if approval is needed. You can turn
+**Launch at login** off in the app; updates preserve that choice.
 
-Running a downloaded app outside Applications can lead to a translocated,
-temporary path, which is unsuitable for reliable launch at login.
+## Updating an existing installation
 
-`./build.sh install` builds, replaces the app in `/Applications` and relaunches
-it. Do not use that command just to build or test.
+Use **Check for Updates…** in FlickOff. **Check for updates automatically** is
+enabled by default and can be turned off. Sparkle handles the update
+and verifies its signatures. macOS may request permission to replace the app.
 
-## Gatekeeper
+You can also run a newer installer over the existing installation. It preserves
+preferences and handles closing and reopening the app. An older installer
+refuses to replace a newer build.
 
-Local builds use an ad-hoc signature. Downloaded copies without a Developer ID
-signature and notarization may be blocked by Gatekeeper.
+## If macOS blocks the beta installer
 
-After checking where the app came from, try opening it, then use **System Settings
-→ Privacy & Security → Open Anyway** if macOS offers that option. Follow the
-confirmation prompts. Managed Macs may prohibit this exception.
+This public beta is not notarized. The installer app and FlickOff use ad-hoc
+signatures rather than Developer ID signatures.
 
-Do not disable Gatekeeper globally or remove quarantine from unrelated files.
-If macOS says an app is damaged, rebuild it from trusted source and check the
-signature instead of assuming it is safe to open.
+After checking that the disk image came from this project's GitHub Release, try
+opening **Install FlickOff**. If macOS blocks it, open **System Settings → Privacy & Security**
+and use **Open Anyway** when offered, then confirm the system prompt. A managed
+Mac may require your administrator's approval.
 
-## Launch at login
+## Build and install from source
 
-The app attempts to register itself on the first launch from Applications. macOS
-may require approval under **System Settings → General → Login Items** (the pane
-name varies by OS version). The app provides localized guidance and a shortcut.
+For development, install Xcode or Command Line Tools with Swift 6.0+, then run:
 
-The **Launch at login** toggle controls registration. Turning it off is remembered,
-including if you later move the app into Applications.
+```sh
+./build.sh
+python3 scripts/make_installer.py --output build/local-installer
+```
 
-## Quit, recover, uninstall
+Open the generated disk image and **Install FlickOff**. The build does not install it.
+`./build.sh test` runs the ordinary automated suite without changing the panel.
 
-**Quit** restores the brightness settings found before the app started. The app
-remembers its own selected mode for next time. Off controls the display only;
-touch input can still work.
+## Quit or uninstall
 
-To uninstall, disable **Launch at login**, quit, then remove the app. To also
-remove saved preferences, run this after quitting:
+**Quit** restores the brightness settings found at application startup. To remove
+FlickOff, turn off **Launch at login**, choose **Quit**, and move the app from
+Applications to Trash. Saved preferences are kept unless you explicitly remove
+them after quitting:
 
 ```sh
 defaults delete io.github.ZheMaxy.FlickOff
 ```
 
-If a crash leaves unexpected brightness or a dark panel, reopen the app, choose
-Auto, and quit normally. Restart the Mac if it does not recover.
-See [troubleshooting](TROUBLESHOOTING.md).
+For flickering, Off mode or crash recovery, see
+[Touch Bar troubleshooting](TROUBLESHOOTING.md).
