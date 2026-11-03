@@ -13,12 +13,21 @@ final class UpdateController: NSObject, ObservableObject {
     @Published private(set) var automaticallyChecksForUpdates = false
     /// A scheduled check found this version and nobody has looked at it yet.
     @Published private(set) var waitingUpdateVersion: String?
+    /// Everything is a beta for now, so this starts on. Stable users can turn it off once a stable release exists.
+    @Published private(set) var includesBetaUpdates: Bool
     private var controller: SPUStandardUpdaterController!
     private var started = false
 
+    private nonisolated static let includeBetasKey = "includeBetaUpdates"
+
+    private nonisolated static var betasAreIncluded: Bool {
+        UserDefaults.standard.object(forKey: includeBetasKey) as? Bool ?? true
+    }
+
     override init() {
+        includesBetaUpdates = Self.betasAreIncluded
         super.init()
-        controller = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: self)
+        controller = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: self, userDriverDelegate: self)
         controller.updater.publisher(for: \.canCheckForUpdates)
             .receive(on: RunLoop.main)
             .assign(to: &$canCheckForUpdates)
@@ -41,9 +50,20 @@ final class UpdateController: NSObject, ObservableObject {
         controller.updater.automaticallyChecksForUpdates = enabled
     }
 
+    func setIncludesBetaUpdates(_ enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: Self.includeBetasKey)
+        includesBetaUpdates = enabled
+    }
+
     fileprivate func announce(_ version: String?) {
         if let version { NSLog("FlickOff: update %@ is waiting in the menu", version) }
         waitingUpdateVersion = version
+    }
+}
+
+extension UpdateController: SPUUpdaterDelegate {
+    nonisolated func allowedChannels(for updater: SPUUpdater) -> Set<String> {
+        Self.betasAreIncluded ? ["beta"] : []
     }
 }
 

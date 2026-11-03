@@ -93,5 +93,6 @@
 /* Software updates */
 "updates.check" = "Check for Updates…";
 "updates.automatic" = "Check for updates automatically";
+"updates.beta" = "Include beta versions";
 /* %@ = version of an update waiting for the user */
 "updates.available" = "Update to %@…";

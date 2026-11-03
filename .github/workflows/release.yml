@@ -1,0 +1,46 @@
+name: Release build
+
+# Builds and attests the files a release is made of, so anyone can check which commit they came from.
+# Signing them happens on the owner's Mac with scripts/publish.py: no signing key ever reaches CI.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    # The newest SDK, and deliberately no cache: a release starts clean.
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: swift --version
+      - name: Tests, private API contract, bundle and read-only smoke checks
+        env:
+          TB_API_TESTS: '1'
+        run: ./build.sh
+      - name: Package and validate
+        run: |
+          python3 scripts/make_installer.py --output dist
+          python3 Tests/Integration/installer_test.py --pkg dist/*.pkg --dmg dist/*.dmg
+          version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' build/FlickOff.app/Contents/Info.plist)
+          ditto -c -k --sequesterRsrc --keepParent build/FlickOff.app "dist/FlickOff-$version-arm64.zip"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.zip
+            dist/*.dmg
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+          path: |
+            dist/*.zip
+            dist/*.dmg
+          if-no-files-found: error
+          retention-days: 30

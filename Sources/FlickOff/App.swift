@@ -259,6 +259,10 @@ struct MenuView: View {
                 get: { updates.automaticallyChecksForUpdates },
                 set: { updates.setAutomaticChecks($0) }
             ))
+            Toggle(L("updates.beta"), isOn: Binding(
+                get: { updates.includesBetaUpdates },
+                set: { updates.setIncludesBetaUpdates($0) }
+            ))
             Button(L("updates.check")) { updates.checkForUpdates() }
                 .disabled(!updates.canCheckForUpdates)
             HStack {
