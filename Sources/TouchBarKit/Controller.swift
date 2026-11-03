@@ -60,10 +60,11 @@ public final class Controller: ObservableObject {
     /// Set while diagnostics probes run, so the controller doesn't undo what they test.
     public var enforcementPaused = false
 
-    private var timer: Timer?
+    // Used on the main actor, and from deinit once nothing else can reach them.
+    nonisolated(unsafe) private var timer: Timer?
+    nonisolated(unsafe) private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private var ticks = 0
     private var started = false
-    private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private var originalBrightness: (auto: Bool, level: Float)?
     private(set) var systemAsleep = false
 

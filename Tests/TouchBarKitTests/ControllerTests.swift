@@ -237,7 +237,7 @@ struct LoginItemTests {
 @Suite("Unsupported system")
 @MainActor
 struct UnsupportedSystemTests {
-    @Test(arguments: ["api", "touchBar", "control"])
+    @Test(arguments: ["api", "corebrightnessd", "control"])
     func failedCheckDisablesAllControl(failedCheck: String) {
         let h = Harness(settings: ["mode": "off"])
         let c = h.makeController(compatibility: .failing(at: failedCheck))

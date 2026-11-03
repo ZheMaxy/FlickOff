@@ -14,6 +14,7 @@ let package = Package(
         .target(
             name: "TouchBarKit",
             dependencies: ["TBPrivate"],
+            swiftSettings: [.swiftLanguageMode(.v6)],
             linkerSettings: [.linkedFramework("IOKit"), .linkedFramework("ServiceManagement")]
         ),
         // SwiftUI menu bar app; build.sh wraps the binary into FlickOff.app.

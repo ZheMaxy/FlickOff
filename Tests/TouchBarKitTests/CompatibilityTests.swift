@@ -16,7 +16,6 @@ struct CompatibilityTests {
         ("hardware", CompatibilityProblem.noTouchBar),
         ("frameworks", .unsupportedOS),
         ("api", .unsupportedOS),
-        ("touchBar", .noTouchBar),
         ("corebrightnessd", .unsupportedOS),
         ("control", .controlDenied),
         ("touchBarServer", .unsupportedOS),

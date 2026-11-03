@@ -39,11 +39,7 @@ public struct CompatibilityReport: Equatable, Sendable {
         // No Touch Bar is the real answer even if the private APIs are broken too.
         if checks.contains(where: { $0.name == "hardware" && !$0.passed }) { return .noTouchBar }
         guard let failed = checks.first(where: { !$0.passed }) else { return nil }
-        switch failed.name {
-        case "touchBar": return .noTouchBar
-        case "control": return .controlDenied
-        default: return .unsupportedOS
-        }
+        return failed.name == "control" ? .controlDenied : .unsupportedOS
     }
 
     /// Plain-text report a tester can paste into an email.
@@ -91,6 +87,6 @@ public struct SystemInfo: Equatable, Sendable {
         guard sysctlbyname(name, nil, &size, nil, 0) == 0, size > 0 else { return "unknown" }
         var buffer = [CChar](repeating: 0, count: size + 1)
         guard sysctlbyname(name, &buffer, &size, nil, 0) == 0 else { return "unknown" }
-        return String(cString: buffer)
+        return String(decoding: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
     }
 }

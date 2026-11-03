@@ -1,36 +1,13 @@
 #import "TBDiagnostics.h"
+#import "TBPrivateAPI.h"
 #import <objc/runtime.h>
-#include <dlfcn.h>
 #include <math.h>
 #include <stdint.h>
 #include <sys/sysctl.h>
 #include <IOKit/IOKitLib.h>
 
-@interface BrightnessSystemClient : NSObject
-- (id)copyPropertyForKey:(NSString *)key;
-- (id)copyPropertyForKey:(NSString *)key andDisplay:(unsigned long long)displayID;
-- (BOOL)setProperty:(id)value withKey:(NSString *)key andDisplay:(unsigned long long)displayID;
-@end
-
-@interface DFRBrightnessClient : NSObject
-- (unsigned)getDFRDisplayID;
-- (long long)getDimmingStep;
-- (BOOL)dimToStep:(long long)step withCoefficient:(float)coefficient;
-- (BOOL)turnOn;
-- (BOOL)turnOff;
-- (id)copyPropertyForKey:(id)key;
-@end
-
 static NSString *const kCoreBrightness = @"/System/Library/PrivateFrameworks/CoreBrightness.framework/CoreBrightness";
 static NSString *const kDFRBrightness = @"/System/Library/PrivateFrameworks/DFRBrightness.framework/DFRBrightness";
-
-static void LoadFrameworks(void) {
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        dlopen(kCoreBrightness.fileSystemRepresentation, RTLD_NOW);
-        dlopen(kDFRBrightness.fileSystemRepresentation, RTLD_NOW);
-    });
-}
 
 static NSString *SysctlString(const char *name) {
     size_t size = 0;
@@ -68,13 +45,13 @@ static BOOL Attempt(BOOL (^step)(void)) {
 }
 
 static DFRBrightnessClient *NewDFRClient(void) {
-    LoadFrameworks();
+    TBLoadPrivateFrameworks();
     Class cls = NSClassFromString(@"DFRBrightnessClient");
     return cls ? [[cls alloc] init] : nil;
 }
 
 static BrightnessSystemClient *NewCBClient(void) {
-    LoadFrameworks();
+    TBLoadPrivateFrameworks();
     Class cls = NSClassFromString(@"BrightnessSystemClient");
     return cls ? [[cls alloc] init] : nil;
 }
@@ -92,7 +69,7 @@ static BOOL HasDisplayAPI(BrightnessSystemClient *cb) {
 @implementation TBDiagnostics
 
 + (NSArray<NSArray<NSString *> *> *)collectSections {
-    LoadFrameworks();
+    TBLoadPrivateFrameworks();
     NSMutableArray<NSArray<NSString *> *> *sections = [NSMutableArray array];
     void (^section)(NSString *, NSString * (^)(void)) = ^(NSString *title, NSString * (^body)(void)) {
         NSString *text;

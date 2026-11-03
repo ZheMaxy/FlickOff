@@ -1,25 +1,10 @@
 #import "TBTouchBar.h"
+#import "TBPrivateAPI.h"
 #include <dlfcn.h>
 #include <math.h>
 #include <stdint.h>
 #include <IOKit/IOKitLib.h>
 #import <objc/runtime.h>
-
-// Display-addressed corebrightnessd calls.
-@interface BrightnessSystemClient : NSObject
-- (id)copyPropertyForKey:(NSString *)key andDisplay:(unsigned long long)displayID;
-- (BOOL)setProperty:(id)value withKey:(NSString *)key andDisplay:(unsigned long long)displayID;
-@end
-
-@interface DFRBrightnessClient : NSObject
-- (unsigned)getDFRDisplayID;
-- (long)getDimmingStep;
-- (BOOL)dimToStep:(long)step;
-- (BOOL)turnOn;
-- (BOOL)turnOff;
-- (void)scheduleWithDispatchQueue:(dispatch_queue_t)queue;
-- (void)registerDisplayStateUpdateCallbackWithBlock:(void (^)(long state))block;
-@end
 
 static NSArray<NSString *> *Frameworks(void) {
     return @[@"/System/Library/PrivateFrameworks/CoreBrightness.framework/CoreBrightness",
@@ -35,8 +20,7 @@ static NSDictionary<NSString *, NSArray<NSString *> *> *RequiredAPIs(void) {
     };
 }
 
-/// Returns the frameworks that failed to load, with the dlerror text.
-static NSArray<NSString *> *LoadFrameworks(void) {
+NSArray<NSString *> *TBLoadPrivateFrameworks(void) {
     NSMutableArray<NSString *> *failed = [NSMutableArray array];
     static NSArray<NSString *> *cachedFailures;
     static dispatch_once_t once;
@@ -99,7 +83,7 @@ static NSString *DescribeBadValue(NSString *key, id value, NSError *error) {
 }
 
 + (NSArray<NSString *> *)missingAPIs {
-    LoadFrameworks();
+    TBLoadPrivateFrameworks();
     NSMutableArray<NSString *> *missing = [NSMutableArray array];
     NSDictionary<NSString *, NSArray<NSString *> *> *required = RequiredAPIs();
     for (NSString *className in [required.allKeys sortedArrayUsingSelector:@selector(compare:)]) {
@@ -137,7 +121,7 @@ static NSString *DescribeBadValue(NSString *key, id value, NSError *error) {
         BOOL hardware = HasTouchBarHardware();
         add(@"hardware", hardware, hardware ? @"Touch Bar backlight in the device tree" : @"no Touch Bar on this Mac");
 
-        NSArray<NSString *> *failed = LoadFrameworks();
+        NSArray<NSString *> *failed = TBLoadPrivateFrameworks();
         add(@"frameworks", failed.count == 0,
             failed.count ? [@"cannot load " stringByAppendingString:[failed componentsJoinedByString:@", "]]
                          : @"CoreBrightness and DFRBrightness loaded");
@@ -171,7 +155,7 @@ static NSString *DescribeBadValue(NSString *key, id value, NSError *error) {
 
 + (nullable TBTouchBar *)connect {
     @try {
-        if (LoadFrameworks().count || [self missingAPIs].count) return nil;
+        if (TBLoadPrivateFrameworks().count || [self missingAPIs].count) return nil;
         DFRBrightnessClient *dfr = [[NSClassFromString(@"DFRBrightnessClient") alloc] init];
         unsigned displayID = [dfr getDFRDisplayID];
         if (!displayID || displayID == UINT32_MAX) return nil;
