@@ -6,7 +6,13 @@ import UniformTypeIdentifiers
 /// Strings live in Resources/<lang>.lproj/Localizable.strings; macOS picks the first supported system language, English otherwise.
 func L(_ key: String) -> String { NSLocalizedString(key, comment: "") }
 
-let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
+/// With the build number: betas of one version differ only there, and reports must tell them apart.
+let appVersion: String = {
+    let info = Bundle.main.infoDictionary ?? [:]
+    let version = info["CFBundleShortVersionString"] as? String ?? "dev"
+    guard let build = info["CFBundleVersion"] as? String else { return version }
+    return "\(version) (\(build))"
+}()
 
 extension Mode {
     var title: String {
@@ -181,6 +187,7 @@ struct MenuView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("FlickOff").font(.headline)
+                Text(appVersion).font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if c.touchBar != nil {
                     LightOutputLabel(telemetry: c.telemetry)
@@ -243,6 +250,10 @@ struct MenuView: View {
             ))
 
             Divider()
+            if let version = updates.waitingUpdateVersion {
+                Button(String(format: L("updates.available"), version)) { updates.checkForUpdates() }
+                    .buttonStyle(.borderedProminent)
+            }
             Toggle(L("updates.automatic"), isOn: Binding(
                 get: { updates.automaticallyChecksForUpdates },
                 set: { updates.setAutomaticChecks($0) }
@@ -368,6 +379,17 @@ final class DiagnosticsModel: ObservableObject {
     private let runner = ProbeRunner(driver: LiveProbeDriver())
 
     init() {
+        collect()
+    }
+
+    /// The window outlives closing it, and an old snapshot would describe a state that no longer exists.
+    func refresh() {
+        guard running == nil, !collecting else { return }
+        collecting = true
+        collect()
+    }
+
+    private func collect() {
         DispatchQueue.global(qos: .userInitiated).async {
             let sections = DiagnosticsSection.collect()
             DispatchQueue.main.async {
@@ -398,7 +420,8 @@ final class DiagnosticsModel: ObservableObject {
     }
 
     var reportText: String {
-        DiagnosticsReport(compatibility: Controller.shared.compatibility, outcomes: outcomes, sections: sections)
+        DiagnosticsReport(compatibility: Controller.shared.compatibility, outcomes: outcomes,
+                          sections: [Controller.savedSettingsSection()] + sections)
             .text(appVersion: appVersion)
     }
 
@@ -424,14 +447,39 @@ final class DiagnosticsModel: ObservableObject {
 @MainActor
 enum DiagnosticsWindow {
     private static var window: NSWindow?
+    private static var model: DiagnosticsModel?
 
     static func show() {
-        if window == nil {
+        if let window, let model {
+            if !window.isVisible { model.refresh() }
+        } else {
+            let model = DiagnosticsModel()
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 520),
                              styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
             w.title = L("diagnostics.title")
             w.isReleasedWhenClosed = false
-            w.contentView = NSHostingView(rootView: DiagnosticsView(model: DiagnosticsModel()))
+            w.contentView = NSHostingView(rootView: DiagnosticsView(model: model))
+            w.center()
+            window = w
+            self.model = model
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKeyAndOrderFront(nil)
+    }
+}
+
+/// The menu's controls in an ordinary window: what opening the running app shows,
+/// because SwiftUI can't open a menu bar item from code and the icon may be hidden.
+@MainActor
+enum ControlsWindow {
+    private static var window: NSWindow?
+
+    static func show() {
+        if window == nil {
+            let w = NSWindow(contentViewController: NSHostingController(rootView: MenuView(c: .shared)))
+            w.styleMask = [.titled, .closable]
+            w.title = "FlickOff"
+            w.isReleasedWhenClosed = false
             w.center()
             window = w
         }
@@ -460,7 +508,7 @@ struct DiagnosticsView: View {
             GroupBox(label: Text(L("diagnostics.collected"))) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(model.collecting ? L("diagnostics.collecting")
-                                          : String(format: L("diagnostics.collectedSummary"), model.sections.count))
+                                          : String(format: L("diagnostics.collectedSummary"), model.sections.count + 1))
                         .foregroundStyle(.secondary)
                     DisclosureGroup(L("diagnostics.showDetails")) {
                         ScrollView {
@@ -546,17 +594,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         Controller.shared.prepareForQuit()
     }
+
+    /// Opening the app while it runs, from Finder or Spotlight or as a second copy.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        ControlsWindow.show()
+        return false
+    }
 }
 
 struct FlickOffApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var controller = Controller.shared
+    @StateObject private var updates = UpdateController.shared
 
     var body: some Scene {
         MenuBarExtra {
             MenuView(c: controller)
         } label: {
-            Image(systemName: controller.menuBarSymbol)
+            Image(systemName: updates.waitingUpdateVersion == nil ? controller.menuBarSymbol : "arrow.down.circle.fill")
         }
         .menuBarExtraStyle(.window)
     }
@@ -568,7 +623,8 @@ enum Entry {
         // `FlickOff --self-test`: print the compatibility report and exit 0 (supported) or 1.
         // `FlickOff --diagnose`: self-test plus the system snapshot testers send (no probes).
         if CommandLine.arguments.contains("--diagnose") {
-            let report = DiagnosticsReport(compatibility: CompatibilityReport.run(), sections: DiagnosticsSection.collect())
+            let report = DiagnosticsReport(compatibility: CompatibilityReport.run(),
+                                           sections: [Controller.savedSettingsSection()] + DiagnosticsSection.collect())
             print(report.text(appVersion: appVersion))
             exit(0)
         }
@@ -591,6 +647,26 @@ enum Entry {
             print(report.text(appVersion: appVersion))
             exit(report.isSupported ? 0 : 1)
         }
+        // Two copies would overwrite each other's settings, and each would remember the other's as the
+        // brightness to restore. The copy already running shows its controls instead.
+        if let running = otherRunningCopy() {
+            if let url = running.bundleURL { NSWorkspace.shared.open(url) }
+            exit(0)
+        }
         FlickOffApp.main()
+    }
+
+    private static func otherRunningCopy() -> NSRunningApplication? {
+        guard let identifier = Bundle.main.bundleIdentifier else { return nil }
+        let own = ProcessInfo.processInfo.processIdentifier
+        var others: [NSRunningApplication] = []
+        // A copy that is quitting needs a moment to give the panel back; don't mistake it for a running one.
+        for _ in 0..<10 {
+            others = NSRunningApplication.runningApplications(withBundleIdentifier: identifier)
+                .filter { $0.processIdentifier != own && !$0.isTerminated }
+            if others.isEmpty { return nil }
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+        return others.first
     }
 }

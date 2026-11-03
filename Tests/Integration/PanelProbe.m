@@ -58,6 +58,29 @@ int main(int argc, const char *argv[]) {
             NSRunningApplication *app = [NSRunningApplication runningApplicationWithProcessIdentifier:atoi(argv[2])];
             return app && [app terminate] ? 0 : 1;
         }
+        // Counts the ordinary windows a process shows on screen; its menu bar item sits on a higher layer.
+        if ([command isEqual:@"windows"] && argc == 3) {
+            NSArray *windows = CFBridgingRelease(CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID));
+            int count = 0;
+            for (NSDictionary *window in windows) {
+                if ([window[(__bridge id)kCGWindowOwnerPID] intValue] == atoi(argv[2])
+                    && [window[(__bridge id)kCGWindowLayer] intValue] == 0) count++;
+            }
+            printf("%d\n", count);
+            return 0;
+        }
+        // Counts as user input without moving the pointer. Needs Accessibility access: exit code 3 without it.
+        if ([command isEqual:@"input"]) {
+            if (!CGPreflightPostEventAccess()) return 3;
+            CGEventRef current = CGEventCreate(NULL);
+            if (!current) return 1;
+            CGEventRef move = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, CGEventGetLocation(current), kCGMouseButtonLeft);
+            CFRelease(current);
+            if (!move) return 1;
+            CGEventPost(kCGHIDEventTap, move);
+            CFRelease(move);
+            return 0;
+        }
         TBTouchBar *tb = [TBTouchBar connect];
         if (!tb) { fprintf(stderr, "No Touch Bar connection\n"); return 1; }
         if ([command isEqual:@"level"] && argc == 3) {

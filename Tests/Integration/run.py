@@ -179,6 +179,38 @@ def main():
                     finish(before)
                 check("real app clamps out-of-range launch preferences")
 
+                # Needs the test Mac left alone for a few seconds at a time.
+                before = launch("manual", idle=5)
+                wait(lambda s: s["panel"] == 1, "idle power-off", timeout=120)
+                check("running app turns the panel off after the idle delay")
+                if run(probe, "input", check=False).returncode == 0:
+                    wait(lambda s: s["panel"] == 2, "panel wake on input", timeout=2)
+                    check("input lights a panel turned off for idleness")
+                    wait(lambda s: s["panel"] == 1, "idle power-off after input", timeout=120)
+                else:
+                    print("SKIP: posting input needs Accessibility access", flush=True)
+                run(probe, "on")
+                time.sleep(2)
+                assert state()["panel"] == 2, "panel lit from outside went dark again before the idle delay"
+                wait(lambda s: s["panel"] == 1, "idle power-off after an outside wake", timeout=120)
+                check("a panel lit from outside, as by a touch, gets another idle delay")
+                finish(before, terminate=True)
+                wait(lambda s: s["panel"] == 2, "panel release on SIGTERM during idle power-off")
+                check("SIGTERM gives back a panel turned off for idleness")
+
+                before = launch("manual")
+                wait(lambda s: not s["auto"] and abs(s["level"] - 0.8) < 0.02, "manual launch before a second copy")
+                second = subprocess.run([str(binary)], capture_output=True, text=True, timeout=15)
+                assert second.returncode == 0, second.stderr
+                assert active.poll() is None, "second copy stopped the running app"
+                check("a second copy exits and leaves the running app in charge")
+                end = time.monotonic() + 4
+                while int(run(probe, "windows", active.pid).stdout) < 1 and time.monotonic() < end:
+                    time.sleep(0.1)
+                assert int(run(probe, "windows", active.pid).stdout) == 1, "reopening did not show a window"
+                check("opening the running app again shows its controls in a window")
+                finish(before)
+
             finally:
                 if active is not None and active.poll() is None:
                     active.send_signal(signal.SIGTERM)
