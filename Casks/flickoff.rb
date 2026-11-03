@@ -14,15 +14,15 @@ cask "flickoff" do
 
   auto_updates true
   depends_on arch: :arm64
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "FlickOff.app"
 
   # FlickOff isn't notarized, which takes a paid Apple membership. Installing from this tap is
   # the choice to trust it, so the app opens without the Gatekeeper warning. Sparkle still checks
   # the Ed25519 signature of every update.
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/FlickOff.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/FlickOff.app"]
   end
 
   uninstall quit: "io.github.ZheMaxy.FlickOff"
