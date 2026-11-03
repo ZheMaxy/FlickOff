@@ -76,8 +76,9 @@ holds for build 5 as installed by the update above.
 
 ## Homebrew
 
-A local tap of this repository installed the cask into a temporary folder. The copy was
-owned by the user and had no quarantine flag, and it opened with no Gatekeeper prompt.
+Tapping this repository from GitHub installed the cask into a temporary folder. The app
+was the same binary as the release, owned by the user with no quarantine flag. A copy
+installed the same way from a local tap opened with no Gatekeeper prompt.
 
 The current login-item status is enabled; this read-only check does not establish
 that an actual logout/login cycle launches the app correctly.
