@@ -26,6 +26,26 @@ extension Mode {
     }
 }
 
+extension IdleBehavior {
+    static var choices: [IdleBehavior] { [.system, .stayLit] + offDelays.map { .turnOff(afterSeconds: $0) } }
+
+    var title: String {
+        switch self {
+        case .system: return L("idle.system")
+        case .stayLit: return L("idle.stayLit")
+        case .turnOff(let seconds): return String(format: L("idle.offAfter"), seconds / 60)
+        }
+    }
+
+    var note: String {
+        switch self {
+        case .system: return L("idle.system.note")
+        case .stayLit: return L("idle.stayLit.note")
+        case .turnOff: return L("idle.offAfter.note")
+        }
+    }
+}
+
 extension CompatibilityProblem {
     var message: String {
         switch self {
@@ -206,10 +226,13 @@ struct MenuView: View {
                 .opacity(c.mode == .manual ? 1 : 0.4)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Toggle(L("preventDimming"), isOn: $c.preventDimming)
-                    Text(L("preventDimming.note"))
+                    Picker(L("idle.label"), selection: $c.idleBehavior) {
+                        ForEach(IdleBehavior.choices, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    Text(c.idleBehavior.note)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .disabled(c.mode == .off)
             }

@@ -129,6 +129,13 @@ struct DiagnosticsReportTests {
         #expect(text.contains("== Mac ==\nmodel: X"))
     }
 
+    @Test func reportsNameTheSavedSettingsAndNothingElseFromPreferences() {
+        let h = Harness(settings: ["mode": "off", "level": 0.358, "idleOffSeconds": 300, "unrelated": "private"])
+        let section = Controller.savedSettingsSection(defaults: h.defaults)
+        #expect(section.title == "FlickOff settings")
+        #expect(section.text == "mode: off\nlevel: 36%\nwhen idle: turnOff(afterSeconds: 300)")
+    }
+
     @Test func uuidsAreReplacedConsistently() {
         let text = DiagnosticsReport.redactIdentifiers("a 37D8832A-2D66-02CA-B9F7-8F30A301B230 b c7542cdb-cd3d-f549-c90b-a2661d91f570 c 37d8832a-2d66-02ca-b9f7-8f30a301b230")
         #expect(text == "a <uuid-1> b <uuid-2> c <uuid-1>")

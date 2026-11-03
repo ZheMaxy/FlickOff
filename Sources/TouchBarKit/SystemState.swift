@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import IOKit
 import ServiceManagement
 
@@ -9,6 +10,10 @@ public protocol SystemStateProviding {
     var isScreenLocked: Bool { get }
     /// false while another user owns the console (fast user switching).
     var isSessionActive: Bool { get }
+    /// Time since the last keyboard, trackpad or mouse input in this session.
+    var secondsSinceLastInput: TimeInterval { get }
+    /// A clock that doesn't jump when the user changes the date.
+    var uptime: TimeInterval { get }
 }
 
 public struct LiveSystemState: SystemStateProviding {
@@ -42,6 +47,15 @@ public struct LiveSystemState: SystemStateProviding {
         guard let session = CGSessionCopyCurrentDictionary() as? [String: Any] else { return false }
         return session["kCGSSessionOnConsoleKey"] as? Bool ?? false
     }
+
+    public var secondsSinceLastInput: TimeInterval {
+        // kCGAnyInputEventType isn't imported as a case of CGEventType. Answering 0 keeps the panel lit.
+        guard let anyInput = CGEventType(rawValue: ~0) else { return 0 }
+        let seconds = CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: anyInput)
+        return seconds.isFinite && seconds > 0 ? seconds : 0
+    }
+
+    public var uptime: TimeInterval { ProcessInfo.processInfo.systemUptime }
 }
 
 public enum LoginItemStatus: Equatable, Sendable {

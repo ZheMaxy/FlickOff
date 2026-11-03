@@ -11,8 +11,15 @@
 /* Slider value: percent, nits */
 "brightness.value" = "%1$ld%% · %2$ld nits";
 
-"preventDimming" = "Don't dim when idle";
-"preventDimming.note" = "Keeping it lit speeds up OLED burn-in.";
+/* What the Touch Bar does while nobody uses the Mac */
+"idle.label" = "When idle";
+"idle.system" = "Let macOS dim it";
+"idle.system.note" = "macOS dims the panel when idle, which can bring the flicker back.";
+"idle.stayLit" = "Stay lit";
+"idle.stayLit.note" = "Keeping it lit speeds up OLED burn-in.";
+/* %ld = minutes */
+"idle.offAfter" = "Turn off after %ld min";
+"idle.offAfter.note" = "Skips the dim range and spares the OLED. Using the Mac or touching the bar lights it again.";
 
 "launchAtLogin" = "Launch at login";
 "quit" = "Quit";

@@ -8,6 +8,23 @@ public enum Mode: String, CaseIterable, Identifiable, Sendable {
     public var id: String { rawValue }
 }
 
+/// What the panel does while nobody is using the Mac.
+public enum IdleBehavior: Hashable, Sendable {
+    /// macOS dims and powers off the panel on its own schedule.
+    case system
+    /// Undo idle dimming and power-off for as long as the Mac is awake, unlocked and open.
+    case stayLit
+    /// Stay lit while the Mac is in use, then go dark without passing through the dim range.
+    case turnOff(afterSeconds: Int)
+
+    /// The delays the menu offers.
+    public static let offDelays = [60, 300, 900]
+    /// Spares the OLED by default. Existing installations keep staying lit until the user chooses.
+    static let newInstallation = IdleBehavior.turnOff(afterSeconds: 300)
+    /// Shorter stored values are ignored, so a bad preference can't keep blanking the panel.
+    static let shortestOffDelay = 5
+}
+
 /// Light output shown in the menu header. Separate from Controller so a changing reading redraws
 /// only that label; a change on Controller itself also redraws the menu bar icon.
 @MainActor
@@ -37,6 +54,7 @@ public final class Controller: ObservableObject {
             guard mode != oldValue else { return }
             defaults.set(mode.rawValue, forKey: Keys.mode)
             resetPanelRefusals()
+            noteActivity()
             applySettings()
             if oldValue == .off, mode != .off, canControl, panelShouldBeLit() {
                 if touchBar?.panelState != .on { notePanelWrite(touchBar?.turnOn() ?? true) }
@@ -57,10 +75,18 @@ public final class Controller: ObservableObject {
         }
     }
 
-    @Published public var preventDimming: Bool {
+    @Published public var idleBehavior: IdleBehavior {
         didSet {
-            defaults.set(preventDimming, forKey: Keys.preventDimming)
+            guard idleBehavior != oldValue else { return }
+            Self.save(idleBehavior, to: defaults)
             resetPanelRefusals()
+            let wasDarkForIdle = idleOff != .inactive
+            noteActivity()
+            // macOS won't light a panel it didn't turn off itself.
+            if wasDarkForIdle, idleBehavior == .system, mode != .off, canControl, panelShouldBeLit() {
+                notePanelWrite(touchBar?.turnOn() ?? true)
+                notePanelWrite(touchBar?.undim() ?? true)
+            }
             enforcePanelState()
         }
     }
@@ -91,6 +117,8 @@ public final class Controller: ObservableObject {
     /// No write may happen until the launch-time brightness was read, or our own value would be restored on quit.
     private var awaitingOriginal = false
     private var panelRefusals = 0
+    private var lastActivity: TimeInterval
+    private var idleOff = IdleOff.inactive
     private var probeRecovery: (@MainActor (_ panelMayLight: Bool) -> Void)?
     private var sessionActive = true
     private(set) var systemAsleep = false
@@ -100,10 +128,17 @@ public final class Controller: ObservableObject {
     /// One refused call can be a service restarting; at the 0.5-second tick this is a couple of seconds of refusals.
     static let refusalsBeforeWarning = 4
 
+    /// How far turning the panel off for idleness has got. corebrightnessd reports the new state a moment
+    /// after a call, so "on" only counts as someone else lighting the panel once "off" has been seen.
+    private enum IdleOff {
+        case inactive, requested, confirmed
+    }
+
     enum Keys {
         static let mode = "mode"
         static let level = "level"
         static let preventDimming = "preventDimming"
+        static let idleOffSeconds = "idleOffSeconds"
         static let loginItemConfigured = "loginItemConfigured"
     }
 
@@ -125,10 +160,44 @@ public final class Controller: ObservableObject {
         self.reconnect = reconnect
         mode = Mode(rawValue: defaults.string(forKey: Keys.mode) ?? "") ?? .manual
         level = Self.validatedLevel(defaults.object(forKey: Keys.level) as? Double ?? 1.0)
-        preventDimming = defaults.object(forKey: Keys.preventDimming) as? Bool ?? true
+        let idle = Self.savedIdleBehavior(defaults)
+        idleBehavior = idle
+        lastActivity = system.uptime
+        // Written now: "no stored delay" marks an installation from before this setting existed.
+        Self.save(idle, to: defaults)
     }
 
-    private static func validatedLevel(_ value: Double) -> Double {
+    nonisolated static func savedIdleBehavior(_ defaults: UserDefaults) -> IdleBehavior {
+        if defaults.object(forKey: Keys.preventDimming) as? Bool == false { return .system }
+        guard let seconds = defaults.object(forKey: Keys.idleOffSeconds) as? Int else {
+            let existing = [Keys.mode, Keys.level, Keys.preventDimming, Keys.loginItemConfigured]
+                .contains { defaults.object(forKey: $0) != nil }
+            return existing ? .stayLit : .newInstallation
+        }
+        return seconds >= IdleBehavior.shortestOffDelay ? .turnOff(afterSeconds: seconds) : .stayLit
+    }
+
+    private static func save(_ behavior: IdleBehavior, to defaults: UserDefaults) {
+        defaults.set(behavior != .system, forKey: Keys.preventDimming)
+        switch behavior {
+        case .system: break
+        case .stayLit: defaults.set(0, forKey: Keys.idleOffSeconds)
+        case .turnOff(let seconds): defaults.set(seconds, forKey: Keys.idleOffSeconds)
+        }
+    }
+
+    /// What the user chose, for reports. Read from preferences, so the command-line report can show it too.
+    public nonisolated static func savedSettingsSection(defaults: UserDefaults = .standard) -> DiagnosticsSection {
+        let mode = defaults.string(forKey: Keys.mode).flatMap(Mode.init(rawValue:)) ?? .manual
+        let level = validatedLevel(defaults.object(forKey: Keys.level) as? Double ?? 1.0)
+        return DiagnosticsSection(title: "FlickOff settings", text: """
+            mode: \(mode.rawValue)
+            level: \(Int((level * 100).rounded()))%
+            when idle: \(savedIdleBehavior(defaults))
+            """)
+    }
+
+    private nonisolated static func validatedLevel(_ value: Double) -> Double {
         value.isFinite ? min(1, max(0, value)) : 1
     }
 
@@ -176,6 +245,7 @@ public final class Controller: ObservableObject {
         guard let touchBar else { return }
         sessionActive = system.isSessionActive
         awaitingOriginal = true
+        noteActivity()
         touchBar.onPanelStateChange { [weak self] in self?.enforcePanelState() }
         applySettings()
         startTimer()
@@ -254,10 +324,11 @@ public final class Controller: ObservableObject {
             if !originalBrightness.auto { touchBar?.setBrightness(originalBrightness.level) }
             self.originalBrightness = nil
         }
-        if mode == .off, panelMayLight {
+        if mode == .off || idleOff != .inactive, panelMayLight {
             touchBar?.turnOn()
             touchBar?.undim()
         }
+        idleOff = .inactive
     }
 
     deinit {
@@ -281,6 +352,7 @@ public final class Controller: ObservableObject {
     public func endProbe() {
         probeRecovery = nil
         enforcementPaused = false
+        noteActivity()
         applySettings()
     }
 
@@ -352,6 +424,7 @@ public final class Controller: ObservableObject {
 
     /// The screen woke or was unlocked.
     func userReturned() {
+        noteActivity()
         retryConnection()
         applySettings()
     }
@@ -371,19 +444,66 @@ public final class Controller: ObservableObject {
         userReturned()
     }
 
-    /// Undo TouchBarServer's idle dimming / idle power-off, or keep the panel off in Off mode.
+    /// Undo TouchBarServer's idle dimming / idle power-off, turn the panel off when idle if asked to,
+    /// or keep it off in Off mode.
     func enforcePanelState() {
         guard let tb = touchBar, canControl else { return }
         if mode == .off {
             if tb.panelState == .on { notePanelWrite(tb.turnOff()) }
             return
         }
-        guard preventDimming else { return }
+        switch idleBehavior {
+        case .system: return
+        case .stayLit: break
+        case .turnOff(let seconds):
+            if keepsDarkForIdle(after: TimeInterval(seconds), tb) { return }
+        }
         let needsOn = tb.panelState == .off
         let needsUndim = tb.dimmingStep != 0
         guard needsOn || needsUndim, panelShouldBeLit() else { return }
         if needsOn { notePanelWrite(tb.turnOn()) }
         if needsUndim { notePanelWrite(tb.undim()) }
+    }
+
+    /// Drives the idle power-off. true while the panel should stay dark because nobody is using the Mac.
+    private func keepsDarkForIdle(after delay: TimeInterval, _ tb: TouchBarControlling) -> Bool {
+        let inputSeconds = system.secondsSinceLastInput
+        let state = tb.panelState
+        switch idleOff {
+        case .inactive:
+            guard min(inputSeconds, system.uptime - lastActivity) >= delay else { return false }
+            if state == .off {
+                idleOff = .confirmed
+            } else if state == .on {
+                let accepted = tb.turnOff()
+                notePanelWrite(accepted)
+                if accepted { idleOff = .requested }
+            }
+            return true
+        case .requested:
+            if inputSeconds < delay {
+                noteActivity()
+                return false
+            }
+            if state == .off {
+                idleOff = .confirmed
+            } else if state == .on {
+                notePanelWrite(tb.turnOff())
+            }
+            return true
+        case .confirmed:
+            // Input, or someone else lit it: most likely a touch on the bar, which no input event reports.
+            if inputSeconds < delay || state == .on {
+                noteActivity()
+                return false
+            }
+            return true
+        }
+    }
+
+    private func noteActivity() {
+        lastActivity = system.uptime
+        idleOff = .inactive
     }
 
     /// The panel must stay dark while the Mac sleeps, the lid is closed, the built-in display sleeps or the screen is locked.

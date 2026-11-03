@@ -98,11 +98,11 @@ def main():
             if pid in app_pids():
                 raise RuntimeError("App did not quit; refusing to start a competing copy")
 
-        def launch(mode, level="0.8", prevent=True):
+        def launch(mode, level="0.8", prevent=True, idle=0):
             nonlocal active
             before = state()
             fixture = dict(saved_preferences or {})
-            fixture.update(mode=mode, level=float(level), preventDimming=prevent,
+            fixture.update(mode=mode, level=float(level), preventDimming=prevent, idleOffSeconds=idle,
                            loginItemConfigured=True, SUEnableAutomaticChecks=False)
             fixture_path = temp / "fixture.plist"
             fixture_path.write_bytes(plistlib.dumps(fixture))

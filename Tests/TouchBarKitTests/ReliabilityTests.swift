@@ -526,3 +526,254 @@ struct EnergyTests {
         #expect(h.touchBar.calls.isEmpty)
     }
 }
+
+@Suite("Turning off when idle")
+@MainActor
+struct IdleOffTests {
+    private let delay: TimeInterval = 300
+
+    /// A running controller whose panel just went dark for idleness.
+    private func darkController(_ h: Harness) -> Controller {
+        let c = h.makeController()
+        c.start()
+        h.system.idle(for: delay)
+        c.tick()
+        c.tick()
+        #expect(h.touchBar.panelState == .off)
+        return c
+    }
+
+    @Test func staysLitUntilTheDelayThenGoesDark() {
+        let h = Harness()
+        let c = h.makeController()
+        c.start()
+        h.system.idle(for: delay - 1)
+        c.tick()
+        #expect(h.touchBar.panelState == .on)
+
+        h.system.idle(for: 1)
+        c.tick()
+        #expect(h.touchBar.panelState == .off)
+        c.prepareForQuit()
+    }
+
+    @Test func undoesDimmingWhileWaiting() {
+        let h = Harness()
+        let c = h.makeController()
+        c.start()
+        h.system.idle(for: delay - 1)
+        h.touchBar.dimmingStep = 2
+        c.tick()
+        #expect(h.touchBar.dimmingStep == 0)
+        c.prepareForQuit()
+    }
+
+    @Test func goesDarkWithoutPassingThroughTheDimRange() {
+        let h = Harness()
+        let c = h.makeController()
+        c.start()
+        h.system.idle(for: delay)
+        h.touchBar.resetCalls()
+        c.tick()
+        #expect(h.touchBar.calls == ["off"], "no brightness write and no dimming on the way down")
+        c.prepareForQuit()
+    }
+
+    @Test func inputLightsItAgain() {
+        let h = Harness()
+        let c = darkController(h)
+        h.touchBar.resetCalls()
+        h.system.input()
+        c.tick()
+        #expect(h.touchBar.panelState == .on)
+        #expect(h.touchBar.calls == ["on"])
+        c.prepareForQuit()
+    }
+
+    @Test func aTouchOnTheBarKeepsItLitForAnotherDelay() {
+        let h = Harness()
+        let c = darkController(h)
+        h.touchBar.resetCalls()
+
+        // A touch wakes the panel through TouchBarServer; no keyboard or mouse event reports it.
+        h.touchBar.simulatePanelStateChange(to: .on)
+        #expect(!h.touchBar.calls.contains("off"))
+
+        h.system.idle(for: delay - 1)
+        c.tick()
+        #expect(h.touchBar.panelState == .on)
+
+        h.system.idle(for: 1)
+        c.tick()
+        #expect(h.touchBar.panelState == .off)
+        c.prepareForQuit()
+    }
+
+    /// corebrightnessd still says "on" right after turnOff; that mustn't look like someone lighting the panel.
+    @Test func aLateStateReportIsNotMistakenForATouch() {
+        let h = Harness()
+        h.touchBar.turnOffReportsLate = true
+        let c = h.makeController()
+        c.start()
+        h.system.idle(for: delay)
+        c.tick()
+        c.tick()
+        #expect(h.touchBar.calls.filter { $0 == "off" }.count == 2, "still trying, not treated as a wake")
+
+        h.touchBar.panelState = .off
+        c.tick()
+        h.touchBar.resetCalls()
+        c.tick()
+        #expect(h.touchBar.calls.isEmpty)
+        c.prepareForQuit()
+    }
+
+    @Test func inputDuringTheLateReportStillWins() {
+        let h = Harness()
+        h.touchBar.turnOffReportsLate = true
+        let c = h.makeController()
+        c.start()
+        h.system.idle(for: delay)
+        c.tick()
+        h.touchBar.panelState = .off
+        h.system.input()
+        c.tick()
+        #expect(h.touchBar.panelState == .on)
+        c.prepareForQuit()
+    }
+
+    @Test(arguments: ["launch", "wake", "unlock", "probe", "mode"])
+    func eventsWithoutInputStillCountAsActivity(event: String) {
+        let h = Harness()
+        let c = h.makeController()
+        h.system.idle(for: delay * 10)
+        switch event {
+        case "launch": break
+        case "wake": c.start(); c.tick(); c.systemWillSleep(); c.systemDidWake()
+        case "unlock": c.start(); c.tick(); c.userReturned()
+        case "probe": c.start(); c.tick(); c.beginProbe { _ in }; c.endProbe()
+        default: c.start(); c.tick(); c.mode = .auto
+        }
+        if event == "launch" { c.start() }
+        c.tick()
+        #expect(h.touchBar.panelState == .on, "the Mac just came back: don't go dark before anyone can touch it")
+        c.prepareForQuit()
+    }
+
+    @Test func quittingGivesTheDarkPanelBack() {
+        let h = Harness()
+        let c = darkController(h)
+        c.prepareForQuit()
+        #expect(h.touchBar.panelState == .on)
+    }
+
+    @Test func quittingDoesNotLightALockedMac() {
+        let h = Harness()
+        let c = darkController(h)
+        h.system.isScreenLocked = true
+        c.prepareForQuit()
+        #expect(h.touchBar.panelState == .off)
+    }
+
+    @Test func inputWhileLockedDoesNotLightIt() {
+        let h = Harness()
+        let c = darkController(h)
+        h.system.isScreenLocked = true
+        h.system.input()
+        c.tick()
+        #expect(h.touchBar.panelState == .off)
+
+        h.system.isScreenLocked = false
+        c.userReturned()
+        #expect(h.touchBar.panelState == .on)
+        c.prepareForQuit()
+    }
+
+    @Test func aPanelThatMacOSAlreadyTurnedOffIsLeftAlone() {
+        let h = Harness()
+        let c = h.makeController()
+        c.start()
+        h.system.isScreenLocked = true
+        h.touchBar.panelState = .off
+        h.system.idle(for: delay)
+        h.touchBar.resetCalls()
+        c.tick()
+        c.tick()
+        #expect(h.touchBar.calls.isEmpty)
+        c.prepareForQuit()
+    }
+
+    @Test func choosingStayLitLightsTheDarkPanel() {
+        let h = Harness()
+        let c = darkController(h)
+        c.idleBehavior = .stayLit
+        #expect(h.touchBar.panelState == .on)
+
+        h.system.idle(for: delay * 10)
+        c.tick()
+        #expect(h.touchBar.panelState == .on)
+        c.prepareForQuit()
+    }
+
+    @Test func handingBackToMacOSLightsItOnceThenLeavesItAlone() {
+        let h = Harness()
+        let c = darkController(h)
+        c.idleBehavior = .system
+        #expect(h.touchBar.panelState == .on)
+
+        h.touchBar.resetCalls()
+        h.touchBar.panelState = .off
+        h.touchBar.dimmingStep = 1
+        c.tick()
+        #expect(h.touchBar.calls.isEmpty)
+        c.prepareForQuit()
+    }
+
+    @Test func aLongerDelayAppliesFromNow() {
+        let h = Harness()
+        let c = darkController(h)
+        c.idleBehavior = .turnOff(afterSeconds: 900)
+        #expect(h.touchBar.panelState == .on)
+        h.system.idle(for: 899)
+        c.tick()
+        #expect(h.touchBar.panelState == .on)
+        h.system.idle(for: 1)
+        c.tick()
+        #expect(h.touchBar.panelState == .off)
+        c.prepareForQuit()
+    }
+
+    @Test func offModeIsNotDisturbedByInput() {
+        let h = Harness(settings: ["mode": "off"])
+        let c = h.makeController()
+        c.start()
+        h.system.input()
+        c.tick()
+        #expect(h.touchBar.panelState == .off)
+        c.prepareForQuit()
+    }
+
+    @Test func refusedTurnOffIsRetriedAndWarnedAbout() {
+        let h = Harness()
+        let c = h.makeController()
+        c.start()
+        h.system.idle(for: delay)
+        h.touchBar.panelWritesSucceed = false
+        for _ in 0..<Controller.refusalsBeforeWarning { c.tick() }
+        #expect(c.panelControlFailed)
+
+        h.touchBar.panelWritesSucceed = true
+        c.tick()
+        #expect(h.touchBar.panelState == .off)
+        #expect(!c.panelControlFailed)
+        c.prepareForQuit()
+    }
+
+    @Test func switchingToAnotherUserGivesTheDarkPanelBack() {
+        let h = Harness()
+        let c = darkController(h)
+        c.sessionDidResignActive()
+        #expect(h.touchBar.panelState == .on)
+        c.prepareForQuit()
+    }
+}

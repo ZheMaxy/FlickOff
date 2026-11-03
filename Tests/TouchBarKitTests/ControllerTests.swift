@@ -5,11 +5,55 @@ import Testing
 @Suite("Settings")
 @MainActor
 struct SettingsTests {
-    @Test func firstLaunchDefaultsToManualMaxWithoutDimming() {
+    @Test func firstLaunchDefaultsToManualMaxOffWhenIdle() {
         let c = Harness().makeController()
         #expect(c.mode == .manual)
         #expect(c.level == 1.0)
-        #expect(c.preventDimming)
+        #expect(c.idleBehavior == .turnOff(afterSeconds: 300))
+    }
+
+    @Test func theFirstLaunchDefaultSurvivesARelaunch() {
+        let h = Harness()
+        _ = h.makeController()
+        h.defaults.set(true, forKey: "loginItemConfigured")
+        #expect(h.makeController().idleBehavior == .turnOff(afterSeconds: 300))
+    }
+
+    @Test(arguments: [
+        ["preventDimming": true],
+        ["loginItemConfigured": true],
+        ["mode": "off"],
+        ["level": 0.5],
+    ] as [[String: any Sendable]])
+    func installationsFromBeforeTheSettingKeepStayingLit(settings: [String: any Sendable]) {
+        let h = Harness(settings: settings)
+        #expect(h.makeController().idleBehavior == .stayLit)
+        #expect(h.defaults.object(forKey: "idleOffSeconds") as? Int == 0)
+    }
+
+    @Test func aPreviousOptOutOfPreventionIsKept() {
+        #expect(Harness(settings: ["preventDimming": false]).makeController().idleBehavior == .system)
+    }
+
+    @Test(arguments: [0, 4, -60])
+    func tooShortDelaysAreIgnored(seconds: Int) {
+        #expect(Harness(settings: ["idleOffSeconds": seconds]).makeController().idleBehavior == .stayLit)
+    }
+
+    @Test func aDelayOfTheWrongTypeCountsAsMissing() {
+        let h = Harness(settings: ["idleOffSeconds": "soon", "loginItemConfigured": true])
+        #expect(h.makeController().idleBehavior == .stayLit)
+    }
+
+    @Test func idleBehaviorIsPersisted() {
+        let h = Harness()
+        let c = h.makeController()
+        c.idleBehavior = .turnOff(afterSeconds: 60)
+        #expect(h.makeController().idleBehavior == .turnOff(afterSeconds: 60))
+        c.idleBehavior = .stayLit
+        #expect(h.makeController().idleBehavior == .stayLit)
+        c.idleBehavior = .system
+        #expect(h.makeController().idleBehavior == .system)
     }
 
     @Test func restoresSavedSettings() {
@@ -17,7 +61,7 @@ struct SettingsTests {
         let c = h.makeController()
         #expect(c.mode == .auto)
         #expect(c.level == 0.4)
-        #expect(!c.preventDimming)
+        #expect(c.idleBehavior == .system)
     }
 
     @Test func unknownSavedModeFallsBackToManual() {
@@ -30,7 +74,7 @@ struct SettingsTests {
         let c = h.makeController()
         c.mode = .off
         c.level = 0.25
-        c.preventDimming = false
+        c.idleBehavior = .system
         #expect(h.defaults.string(forKey: "mode") == "off")
         #expect(h.defaults.double(forKey: "level") == 0.25)
         #expect(h.defaults.object(forKey: "preventDimming") as? Bool == false)
@@ -304,7 +348,7 @@ struct ReviewRegressionTests {
         c.enforcementPaused = true
         c.mode = .manual
         c.level = 0.4
-        c.preventDimming = false
+        c.idleBehavior = .system
         #expect(h.touchBar.calls.isEmpty)
     }
 

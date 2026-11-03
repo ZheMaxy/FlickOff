@@ -7,6 +7,8 @@ final class FakeTouchBar: TouchBarControlling {
     var brightnessWritesSucceed = true
     var panelWritesSucceed = true
     var readsFail = false
+    /// corebrightnessd reports the new state a moment after a call.
+    var turnOffReportsLate = false
     var autoBrightness = true
     var brightness: Float = 0.3
     var physicalNits: Float = 100
@@ -53,7 +55,7 @@ final class FakeTouchBar: TouchBarControlling {
     func turnOff() -> Bool {
         calls.append("off")
         guard panelWritesSucceed else { return false }
-        panelState = .off
+        if !turnOffReportsLate { panelState = .off }
         return true
     }
 
@@ -77,6 +79,18 @@ final class FakeSystemState: SystemStateProviding {
     var isBuiltInDisplayAsleep = false
     var isScreenLocked = false
     var isSessionActive = true
+    var secondsSinceLastInput: TimeInterval = 0
+    var uptime: TimeInterval = 1000
+
+    /// Nobody touched the Mac for this long.
+    func idle(for seconds: TimeInterval) {
+        secondsSinceLastInput += seconds
+        uptime += seconds
+    }
+
+    func input() {
+        secondsSinceLastInput = 0
+    }
 }
 
 final class FakeLoginItem: LoginItemControlling {

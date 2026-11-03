@@ -74,6 +74,11 @@ struct HardwareTests {
         #expect(LiveSystemState().isSessionActive)
     }
 
+    @Test func idleTimeIsReadable() {
+        let seconds = LiveSystemState().secondsSinceLastInput
+        #expect(seconds.isFinite && seconds >= 0)
+    }
+
     @Test(arguments: ProbeKind.allCases)
     func probeRunsAndPutsEverythingBack(kind: ProbeKind) async throws {
         let tb = try #require(TBTouchBar.connect())
