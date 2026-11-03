@@ -6,6 +6,7 @@ import http.server
 from pathlib import Path
 import plistlib
 import shlex
+import shutil
 import subprocess
 import tempfile
 import threading
@@ -142,8 +143,13 @@ def main():
         finally:
             server.shutdown()
             server.server_close()
+            library = Path.home() / 'Library'
             for test_id in test_ids:
                 run('defaults', 'delete', test_id, check=False)
+                # What macOS and Sparkle keep per identity, which would pile up with each random test id.
+                (library / 'Preferences' / f'{test_id}.plist').unlink(missing_ok=True)
+                for place in ('Caches', 'HTTPStorages'):
+                    shutil.rmtree(library / place / test_id, ignore_errors=True)
 
 
 

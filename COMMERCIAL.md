@@ -9,8 +9,8 @@ that use begins.** Examples include business use, inclusion in a paid product or
 service, paid redistribution, and commercial modifications or integrations, to
 the extent these uses are not permitted by the noncommercial license.
 
-To request a quote, open a **commercial license request** in
-[this repository's issues](https://github.com/ZheMaxy/FlickOff/issues).
+To request a quote, open a
+[commercial license request](https://github.com/ZheMaxy/FlickOff/issues/new?template=commercial_license.md).
 Describe your intended use and approximate number of users or devices. Do not
 post confidential business information; ask for a private contact if needed.
 

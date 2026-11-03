@@ -5,8 +5,8 @@ about: Report brightness, flicker, startup or compatibility problems
 
 **Mac model and chip:**
 **macOS version:**
-**App version or commit:**
-**Mode, brightness and idle-dimming checkbox:**
+**App version and build (top of the menu), or commit:**
+**Mode, brightness and When idle setting:**
 
 What happened? What did you expect?
 

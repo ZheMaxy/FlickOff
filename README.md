@@ -6,33 +6,11 @@ level when low brightness causes flickering, or turn off the Touch Bar display.
 
 **Keep your Mac. Lose the flicker.**
 
-**A flickering Touch Bar shouldn't ruin a perfectly usable MacBook.**
+<img src="docs/images/menu.png" width="320" alt="The FlickOff menu: Auto, Manual and Off modes, a brightness slider at 80 percent, and When idle set to Turn off after 5 min">
 
-You're working in a dim room. The Touch Bar gets darker — and starts flashing.
-A tiny strip above the keyboard keeps pulling your eyes away from the screen.
-The rest of the laptop is fine, but using it has become irritating.
-
-Then comes the frustrating part: **macOS gives you no separate manual brightness
-slider for the Touch Bar itself.** Its brightness is managed automatically. The
-brightness controls *on* the Touch Bar adjust the main screen, not the strip
-that's flickering.
-
-If you're looking at a repair bill for an otherwise useful Mac, here's a
-software workaround to try first.
-
-**FlickOff lets you keep the panel at a higher, fixed brightness,
-or keep its display off entirely — from the menu bar.** No terminal commands
-for everyday use, no administrator access to adjust brightness, and no need to
-stop system services.
-
-This app started with the author's M1 MacBook Pro: its Touch Bar flickers at low
-brightness, while a higher fixed level helps. It cannot repair a failing panel,
-and it will not solve every kind of flicker. It gives you a practical way to
-avoid the troublesome brightness range or stop using the display while deciding
-what to do about hardware service.
-
-[Installation](docs/INSTALL.md) ·
-[Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](CONTRIBUTING.md)
+[Download](#download-flickoff-for-apple-silicon-macs) ·
+[Installation](docs/INSTALL.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) ·
+[Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 ## Download FlickOff for Apple silicon Macs
 
@@ -57,19 +35,48 @@ app and FlickOff use local ad-hoc signatures rather than Developer ID signatures
 **You do not need an Apple Developer account or subscription to install it.**
 Noncommercial use is free; commercial use requires a [paid license](COMMERCIAL.md).
 
+## Why it exists
+
+**A flickering Touch Bar shouldn't ruin a perfectly usable MacBook.**
+
+You're working in a dim room. The Touch Bar gets darker — and starts flashing.
+A tiny strip above the keyboard keeps pulling your eyes away from the screen.
+The rest of the laptop is fine, but using it has become irritating.
+
+Then comes the frustrating part: **macOS gives you no separate manual brightness
+slider for the Touch Bar itself.** Its brightness is managed automatically. The
+brightness controls *on* the Touch Bar adjust the main screen, not the strip
+that's flickering.
+
+If you're looking at a repair bill for an otherwise useful Mac, here's a
+software workaround to try first. No terminal commands for everyday use, no
+administrator access to adjust brightness, and no need to stop system services.
+
+This app started with the author's M1 MacBook Pro: its Touch Bar flickers at low
+brightness, while a higher fixed level helps. It cannot repair a failing panel,
+and it will not solve every kind of flicker. It gives you a practical way to
+avoid the troublesome brightness range or stop using the display while deciding
+what to do about hardware service.
+
 ## Adjust brightness or turn off the Touch Bar display
 
 | Control | Behaviour |
 | --- | --- |
 | **Manual** | Disables automatic Touch Bar brightness and applies your chosen level. Start high, then lower it until comfortable and stable. |
-| **Auto** | Returns brightness control to macOS. Idle dimming is controlled separately by the checkbox. |
+| **Auto** | Returns brightness control to macOS. **When idle** still applies. |
 | **Off** | Keeps the Touch Bar display dark while the app runs. Does not disable touch input or Touch ID. |
-| **Don't dim when idle** | Prevents idle dimming and idle display power-off while the Mac is awake, unlocked and open. |
+| **When idle: Turn off after 1, 5 or 15 min** | Keeps the panel lit while you use the Mac, then turns it off without passing through the dim range. Using the Mac lights it again. |
+| **When idle: Stay lit** | Prevents idle dimming and idle display power-off while the Mac is awake, unlocked and open. |
+| **When idle: Let macOS dim it** | Leaves idling to macOS, which can bring the flicker back. |
 | **Launch at login** | Enabled on first launch; starts the app after login to reapply saved settings. |
 
-First launch selects **Manual, 100%**, with idle dimming prevention and launch
+**When idle** and the menu shown above arrive with the next release. Beta 2 has a
+**Don't dim when idle** checkbox instead, which works like **Stay lit**.
+
+First launch selects **Manual, 100%** and **Turn off after 5 min**, with launch
 at login enabled. macOS may request login-item approval. Updates preserve your
-choice if you turn launch at login off.
+choice if you turn launch at login off, and an installation from before **When
+idle** existed keeps its behaviour until you choose another one.
 **0% is the panel's minimum lit brightness, not Off.** Slider nits are estimated
 from the reported panel range; the header shows reported physical output.
 
@@ -78,7 +85,13 @@ brightness/auto-brightness settings it found at launch and releases Off when the
 Mac is awake and unlocked. Crashes and force quits cannot guarantee restoration.
 
 Keeping an OLED panel lit continuously can increase power use and burn-in risk.
-Use the lowest stable brightness that works for you, or choose Off.
+Use the lowest stable brightness that works for you, and prefer turning off when
+idle or Off to **Stay lit**.
+
+Opening FlickOff while it is running, for example with Spotlight, shows the same
+controls in a window, which helps if the menu bar icon is hidden. A second copy
+quits and leaves the running one in charge. While another user has the screen
+through fast user switching, FlickOff hands back the Touch Bar until you return.
 
 ## Supported MacBook Pro models and macOS versions
 
@@ -107,9 +120,10 @@ is controlled separately by macOS.
 ### Can FlickOff help when my Touch Bar flickers at low brightness?
 
 On the author's M1 MacBook Pro, a higher fixed brightness avoids the range that
-triggers flickering. Try Manual at a comfortable higher level, and keep
-**Don't dim when idle** enabled if idle dimming brings it back. If that does not
-help, try Off or seek hardware service. This is a workaround, not a panel repair.
+triggers flickering. Try Manual at a comfortable higher level. If idle dimming
+brings the flicker back, set **When idle** to turn off or stay lit instead of
+letting macOS dim it. If that does not help, try Off or seek hardware service.
+This is a workaround, not a panel repair.
 
 ### How do I turn off the Touch Bar without disabling Touch ID?
 
@@ -161,8 +175,10 @@ sandbox. Ordinary builds leave it enabled. Release builds omit debug information
 
 CI runs native tests on an Intel macOS runner and separately cross-compiles the
 arm64 release target. Its disposable test bundle has a separate identifier;
-Intel builds are blocked outside native Intel CI. Local release builds require
-arm64 and native execution without Rosetta. Hardware support is unchanged.
+Intel builds are blocked outside native Intel CI. A weekly job runs the tests
+natively on arm64, with a read-only check of the private APIs on current macOS
+images. Local release builds require arm64 and native execution without Rosetta.
+Hardware support is unchanged.
 
 Local builds are ad-hoc signed, not Developer ID signed or notarized. See
 [installation and Gatekeeper](docs/INSTALL.md) before sharing a binary.
@@ -170,10 +186,13 @@ Local builds are ad-hoc signed, not Developer ID signed or notarized. See
 ## In-app updates
 
 Use **Check for Updates…** in the menu. **Check for updates automatically** is
-enabled by default and can be switched off. Sparkle downloads updates and
-handles installation from inside the app. Archives and the update feed are
-Ed25519 signed and verified before installation. Update checks contact GitHub;
-system profiling is disabled. The private signing key is never shipped.
+enabled by default and can be switched off. An update found in the background
+shows on the menu bar icon and at the bottom of the menu. Sparkle downloads
+updates and handles installation from inside the app. The installer leaves the
+app owned by the system, so installing an update asks for an administrator's
+password. Archives and the update feed are Ed25519 signed and verified before
+installation. Update checks contact GitHub; system profiling is disabled. The
+private signing key is never shipped.
 
 ## Diagnostics and tests
 
@@ -181,7 +200,7 @@ system profiling is disabled. The private signing key is never shipped.
 APP=build/FlickOff.app/Contents/MacOS/FlickOff
 "$APP" --self-test     # read-only compatibility report; exit 0/1
 "$APP" --setup-info    # setup guidance; no login-item registration
-"$APP" --diagnose      # read-only report with selected system information
+"$APP" --diagnose      # read-only report with saved settings and selected system information
 ```
 
 **Diagnostics…** in the menu also offers explicit, optional hardware probes. Each
@@ -189,8 +208,9 @@ Run button temporarily changes brightness or panel state, then reapplies the
 app's settings. The brightness probe includes a low level and may cause flicker.
 Review reports before sharing. The app does not upload them automatically.
 
-Ordinary tests cover settings, controller logic, sleep/lock behaviour, failure
-paths, setup guidance, report redaction and localization. Live checks are opt-in:
+Ordinary tests cover settings, controller logic, idle power-off, sleep/lock
+behaviour, user switching, slow services, failure paths, setup guidance, report
+redaction and localization. Live checks are opt-in:
 
 ```sh
 TB_API_TESTS=1 ./build.sh test

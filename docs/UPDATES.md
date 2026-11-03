@@ -1,8 +1,9 @@
 # Software update publishing
 
-FlickOff embeds Sparkle 2.10.1. Users can check from the menu or opt into periodic
-checks. Automatic checking is enabled by default; installation uses Sparkle's
-standard UI. System profiling is disabled.
+FlickOff embeds Sparkle 2.10.1. Users can check from the menu. Periodic checks are
+on by default and can be turned off. An update found in the background shows on
+the menu bar icon and in the menu; installation uses Sparkle's standard UI. System
+profiling is disabled.
 
 The production feed is:
 https://raw.githubusercontent.com/ZheMaxy/FlickOff/main/appcast.xml
@@ -16,17 +17,19 @@ into the repository or place it in command arguments.
 
 ## Build, package and sign
 
-1. Increment CFBundleVersion on every update; Sparkle uses this number. Set the
-   human-readable CFBundleShortVersionString and check platform requirements.
+1. Increment CFBundleVersion on every update; Sparkle uses this number and
+   `make_release.py` refuses one that isn't above the build in `appcast.xml`. Set
+   the human-readable CFBundleShortVersionString and check platform requirements.
 2. Run `./build.sh`, the live hardware suite and integration checks appropriate
    to the change. Keep the app's bundle identifier and signing key stable.
-3. Create a fresh output directory and run:
+3. Write what changed for users in a plain-text file; the update alert shows it.
+   Create a fresh output directory and run:
 
 ```sh
-python3 scripts/make_release.py --tag v1.1.0-beta.2 --output build/release-1.1.0-beta.2
+python3 scripts/make_release.py --tag v1.2.0-beta.1 --notes notes.txt --output build/release-1.2.0-beta.1
 ```
 
-The script makes an app-only ZIP for Sparkle and a disk image with a native
+The tag must match the app version. The script makes an app-only ZIP for Sparkle and a disk image with a native
 installer app for first installation. The installer embeds a system package.
 The script preserves framework symlinks, signs the ZIP, generates and
 signs appcast.xml, verifies both signatures, and writes SHA256SUMS for the ZIP
@@ -65,6 +68,11 @@ It checks signed feed discovery, rejection of altered feed/archive data, and
 actual update installation. It does not replace the user's installed app or
 run its Touch Bar controller. It uses the release signing key locally, so it is
 not a hosted CI test. CI compiles the test companion without running it.
+
+The installer leaves the app owned by root, so updating a real installation asks
+for an administrator. `python3 Tests/Integration/update_test.py --root-owned`
+covers that path with a temporary root-owned copy. A person has to answer its
+administrator prompts.
 
 Apple Developer ID signing/notarization is separate from Sparkle signing. The
 initial beta uses an ad-hoc app signature plus Sparkle Ed25519 update signatures.

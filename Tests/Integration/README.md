@@ -10,7 +10,8 @@ python3 Tests/Integration/run.py
 Requires Python 3 and Xcode/Command Line Tools. Do not run this script in hosted
 CI or concurrently with the hardware unit suite. Keep the test Mac available:
 the panel briefly changes brightness, dims and turns off. The minimum-brightness
-case may cause flickering.
+case may cause flickering. The idle checks need a few seconds at a time without
+keyboard or mouse input, and wait for them.
 
 This tests the **built menu bar app as a separate process**, not a fake controller:
 
@@ -21,6 +22,10 @@ This tests the **built menu bar app as a separate process**, not a fake controll
 - Brightness restoration after normal application quit.
 - Re-enforcement of Off after an external wake, and cleanup on SIGTERM.
 - Validation of out-of-range stored brightness values.
+- Idle power-off after a delay, waking on input, and another delay after the panel
+  is lit from outside. Posting the input needs Accessibility access; the script
+  skips that check without it.
+- A second copy exiting, and the running app showing its controls when opened again.
 
 The helper is compiled into a temporary directory from the same Objective-C
 bridge as the app. It reads panel state and performs explicit test writes. It
@@ -46,6 +51,13 @@ archive validation and installation in isolated temporary bundles. It requires
 the release owner's Keychain signing key; it does not operate the installed app
 or Touch Bar. Each case uses a fresh identity so installer recovery state from a
 negative case cannot affect a later successful installation.
+
+`python3 Tests/Integration/update_test.py --root-owned` updates a temporary copy
+owned by root, as the installer leaves the real app. It asks for an administrator
+to set up the copy, again from Sparkle to replace it, and once more to delete it.
+
+`python3 Tests/Integration/release_checks_test.py` checks the guards in
+`make_release.py`. It needs no signing key and runs in CI.
 
 ## Installer
 

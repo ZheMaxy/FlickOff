@@ -19,7 +19,8 @@ is running, the installer closes it safely, replaces the app and starts the
 installed copy. Your brightness settings and preferences are kept.
 
 If the icon is not visible, press **Command–Space**, type **FlickOff**, and press
-Return. The app itself does not need administrator access to control brightness.
+Return. If FlickOff is already running, this opens its controls in a window. The
+app itself does not need administrator access to control brightness.
 
 You do not need an Apple Developer account or subscription. The installer asks
 for your Mac's administrator authorization, not an Apple Developer login.
@@ -27,7 +28,8 @@ for your Mac's administrator authorization, not an Apple Developer login.
 ## First use and launch at login
 
 The first launch enables **Launch at login** and **Check for updates automatically**,
-selects **Manual, 100%**, and enables **Don't dim when idle**.
+selects **Manual, 100%**, and sets **When idle** to **Turn off after 5 min**
+(in Beta 2, the **Don't dim when idle** checkbox is on instead).
 Lower the brightness to a comfortable stable
 level, or choose **Off** to keep the Touch Bar display dark.
 0% is minimum lit brightness, not Off. Touch ID remains available.
@@ -39,8 +41,10 @@ Login Items**. The app shows guidance if approval is needed. You can turn
 ## Updating an existing installation
 
 Use **Check for Updates…** in FlickOff. **Check for updates automatically** is
-enabled by default and can be turned off. Sparkle handles the update
-and verifies its signatures. macOS may request permission to replace the app.
+enabled by default and can be turned off. An update found in the background
+shows on the menu bar icon and at the bottom of the menu. Sparkle handles the
+update and verifies its signatures. The installer leaves the app owned by the
+system, so macOS asks for an administrator's password to replace it.
 
 You can also run a newer installer over the existing installation. It preserves
 preferences and handles closing and reopening the app. An older installer
@@ -89,11 +93,13 @@ Open the generated disk image and **Install FlickOff**. The build does not insta
 
 **Quit** restores the brightness settings found at application startup. To remove
 FlickOff, turn off **Launch at login**, choose **Quit**, and move the app from
-Applications to Trash. Saved preferences are kept unless you explicitly remove
-them after quitting:
+Applications to Trash. The installer leaves the app owned by the system, so
+Finder asks for an administrator's password. Saved preferences and macOS's record
+of the installation are kept unless you explicitly remove them after quitting:
 
 ```sh
 defaults delete io.github.ZheMaxy.FlickOff
+sudo pkgutil --forget io.github.ZheMaxy.FlickOff.pkg
 ```
 
 For flickering, Off mode or crash recovery, see
