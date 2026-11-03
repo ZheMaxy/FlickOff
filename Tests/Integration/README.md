@@ -10,8 +10,8 @@ python3 Tests/Integration/run.py
 Requires Python 3 and Xcode/Command Line Tools. Do not run this script in hosted
 CI or concurrently with the hardware unit suite. Keep the test Mac available:
 the panel briefly changes brightness, dims and turns off. The minimum-brightness
-case may cause flickering. The idle checks need a few seconds at a time without
-keyboard or mouse input, and wait for them.
+case may cause flickering. The idle checks wait for a few seconds at a time without
+keyboard or mouse input, so someone using the Mac only delays them.
 
 This tests the **built menu bar app as a separate process**, not a fake controller:
 

@@ -43,7 +43,8 @@ static NSDictionary *Snapshot(TBTouchBar *tb) {
              @"panel": @(tb.displayState), @"step": @(tb.dimmingStep),
              @"nits": @(isfinite(tb.physicalNits) ? tb.physicalNits : 0),
              @"locked": @(ScreenLocked()), @"lidClosed": @(LidClosed()),
-             @"displayAsleep": @(DisplayAsleep())};
+             @"displayAsleep": @(DisplayAsleep()),
+             @"idle": @(CGEventSourceSecondsSinceLastEventType(kCGEventSourceStateCombinedSessionState, kCGAnyInputEventType))};
 }
 
 static BOOL Dim(long step) {

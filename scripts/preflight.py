@@ -39,6 +39,14 @@ def quit_running_app():
         raise SystemExit('FlickOff did not quit; quit every copy and try again')
 
 
+def reopen(app):
+    """Waits for it, because the next step needs to find it running to put it back afterwards."""
+    subprocess.run(['open', '-g', app], check=False)
+    end = time.monotonic() + 10
+    while not output('pgrep', '-x', 'FlickOff') and time.monotonic() < end:
+        time.sleep(0.2)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--app', type=Path, help='A CI-built app for the built-app checks, instead of the local build')
@@ -62,7 +70,7 @@ def main():
         step('Hardware tests', './build.sh', 'test', TB_HARDWARE_TESTS='1')
     finally:
         if previous:
-            subprocess.run(['open', '-g', previous], check=False)
+            reopen(previous)
     integration = [sys.executable, 'Tests/Integration/run.py']
     if args.app:
         integration += ['--app', args.app.resolve()]

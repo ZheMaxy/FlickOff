@@ -86,6 +86,22 @@ def main():
                 time.sleep(0.1)
             raise AssertionError(message + "; observed " + json.dumps(state()))
 
+        def wait_for_idle_off(message, delay=5, patience=600):
+            """Someone using the Mac only delays this; failing takes a real pause with the panel still lit."""
+            start = time.monotonic()
+            print(f"Waiting for {delay} seconds without keyboard or mouse input ({message})", flush=True)
+            while time.monotonic() - start < patience:
+                s = state()
+                if s["panel"] == 1:
+                    return
+                if active.poll() is not None:
+                    raise AssertionError("Application exited before " + message)
+                left_alone = min(s["idle"], time.monotonic() - start)
+                if left_alone >= delay + 3:
+                    raise AssertionError(f"{message}: left alone for {left_alone:.1f} s, but the panel stayed lit")
+                time.sleep(0.2)
+            raise AssertionError(f"{message}: the Mac was never left alone for {delay} s in {patience} s; try when it can be")
+
         def check(name):
             passed.append(name)
             print("PASS:", name, flush=True)
@@ -179,20 +195,19 @@ def main():
                     finish(before)
                 check("real app clamps out-of-range launch preferences")
 
-                # Needs the test Mac left alone for a few seconds at a time.
                 before = launch("manual", idle=5)
-                wait(lambda s: s["panel"] == 1, "idle power-off", timeout=120)
+                wait_for_idle_off("idle power-off")
                 check("running app turns the panel off after the idle delay")
                 if run(probe, "input", check=False).returncode == 0:
                     wait(lambda s: s["panel"] == 2, "panel wake on input", timeout=2)
                     check("input lights a panel turned off for idleness")
-                    wait(lambda s: s["panel"] == 1, "idle power-off after input", timeout=120)
+                    wait_for_idle_off("idle power-off after input")
                 else:
                     print("SKIP: posting input needs Accessibility access", flush=True)
                 run(probe, "on")
                 time.sleep(2)
                 assert state()["panel"] == 2, "panel lit from outside went dark again before the idle delay"
-                wait(lambda s: s["panel"] == 1, "idle power-off after an outside wake", timeout=120)
+                wait_for_idle_off("idle power-off after an outside wake")
                 check("a panel lit from outside, as by a touch, gets another idle delay")
                 finish(before, terminate=True)
                 wait(lambda s: s["panel"] == 2, "panel release on SIGTERM during idle power-off")
