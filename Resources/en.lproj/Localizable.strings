@@ -20,6 +20,7 @@
 /* Compatibility problems (launch-time self-test) */
 "error.unsupportedOS" = "This macOS version isn't supported yet.";
 "error.controlDenied" = "macOS didn't allow changing the Touch Bar brightness.";
+"error.panelControlDenied" = "macOS didn't allow turning the Touch Bar on or off.";
 "error.noTouchBar" = "No Touch Bar found on this Mac.";
 "error.copyReport" = "Copy Report";
 "error.reportCopied" = "Copied";

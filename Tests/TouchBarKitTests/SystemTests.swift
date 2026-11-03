@@ -53,11 +53,25 @@ struct HardwareTests {
         let tb = try #require(TBTouchBar.connect())
         defer { tb.turnOn(); tb.undim() }
 
-        tb.turnOff()
+        #expect(tb.turnOff())
         #expect(waitFor { tb.panelState == .off }, "panel did not report off")
-        tb.turnOn()
-        tb.undim()
+        #expect(tb.turnOff(), "turning off a dark panel must not read as a refusal")
+        #expect(tb.turnOn())
+        #expect(tb.undim())
         #expect(waitFor { tb.panelState == .on }, "panel did not report on")
+        #expect(tb.turnOn(), "turning on a lit panel must not read as a refusal")
+        #expect(tb.undim(), "undimming an undimmed panel must not read as a refusal")
+    }
+
+    @Test func brightnessSettingsAreReadable() throws {
+        let tb = try #require(TBTouchBar.connect())
+        let state = try #require(tb.brightnessState)
+        #expect(state.auto == tb.autoBrightness)
+        #expect(abs(state.level - tb.brightness) < 0.02)
+    }
+
+    @Test func thisSessionOwnsTheConsole() {
+        #expect(LiveSystemState().isSessionActive)
     }
 
     @Test(arguments: ProbeKind.allCases)

@@ -65,6 +65,18 @@ public struct ProbeRunner {
         try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
     }
 
+    /// Undoes what a probe interrupted by quitting left behind. The controller restores the brightness itself.
+    public func recover(from kind: ProbeKind, panelMayLight: Bool) {
+        switch kind {
+        case .panelOffOn:
+            if panelMayLight { _ = driver.panelTurnOn() }
+        case .coreBrightnessLevel:
+            break
+        case .dimmingCoefficient:
+            _ = driver.setDimmingCoefficient(1.0)
+        }
+    }
+
     /// Shows the effect and restores the previous state. `.awaitingAnswer` means: ask the user what they saw.
     public func perform(_ kind: ProbeKind) async -> ProbeOutcome {
         switch kind {

@@ -42,6 +42,13 @@ public struct CompatibilityReport: Equatable, Sendable {
         return failed.name == "control" ? .controlDenied : .unsupportedOS
     }
 
+    /// A service that wasn't up yet can still appear, for example right after login.
+    /// A missing Touch Bar or a changed private API can't.
+    public var mayRecover: Bool {
+        guard problem != .noTouchBar, let failed = checks.first(where: { !$0.passed }) else { return false }
+        return failed.name != "frameworks" && failed.name != "api"
+    }
+
     /// Plain-text report a tester can paste into an email.
     public func text(appVersion: String, system: SystemInfo = .current) -> String {
         let width = checks.map(\.name.count).max() ?? 0

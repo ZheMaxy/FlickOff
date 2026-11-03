@@ -238,6 +238,14 @@ static NSString *DescribeBadValue(NSString *key, id value, NSError *error) {
     return [_cb setProperty:@(value) withKey:@"DisplayBrightness" andDisplay:_displayID];
 }
 
+- (nullable NSNumber *)autoBrightnessValue { return [self copyNumber:@"DisplayBrightnessAuto"]; }
+- (nullable NSNumber *)brightnessValue {
+    id value = [self brightnessInfo][@"Brightness"];
+    if (![value isKindOfClass:NSNumber.class]) return nil;
+    float level = [value floatValue];
+    return isfinite(level) && level >= 0 && level <= 1 ? value : nil;
+}
+
 - (float)physicalNits { return [[self brightnessInfo][@"NitsPhysical"] floatValue]; }
 - (float)minNits { return _minNits; }
 - (float)maxNits { return _maxNits; }
@@ -249,9 +257,9 @@ static NSString *DescribeBadValue(NSString *key, id value, NSError *error) {
     return (s == TBDisplayStateOn || s == TBDisplayStateOff) ? (TBDisplayState)s : TBDisplayStateUnknown;
 }
 - (NSInteger)dimmingStep { return [_dfr getDimmingStep]; }
-- (void)undim { [_dfr dimToStep:0]; }
-- (void)turnOn { [_dfr turnOn]; }
-- (void)turnOff { [_dfr turnOff]; }
+- (BOOL)undim { return [_dfr dimToStep:0]; }
+- (BOOL)turnOn { return [_dfr turnOn]; }
+- (BOOL)turnOff { return [_dfr turnOff]; }
 
 - (void)setDisplayStateHandler:(void (^)(TBDisplayState))handler {
     [_dfr registerDisplayStateUpdateCallbackWithBlock:^(long s) {

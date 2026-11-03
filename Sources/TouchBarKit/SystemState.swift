@@ -2,11 +2,13 @@ import CoreGraphics
 import IOKit
 import ServiceManagement
 
-/// Conditions under which the panel must be left dark.
+/// Conditions under which the panel must be left dark or left alone.
 public protocol SystemStateProviding {
     var isLidClosed: Bool { get }
     var isBuiltInDisplayAsleep: Bool { get }
     var isScreenLocked: Bool { get }
+    /// false while another user owns the console (fast user switching).
+    var isSessionActive: Bool { get }
 }
 
 public struct LiveSystemState: SystemStateProviding {
@@ -33,6 +35,12 @@ public struct LiveSystemState: SystemStateProviding {
     public var isScreenLocked: Bool {
         guard let session = CGSessionCopyCurrentDictionary() as? [String: Any] else { return true }
         return session["CGSSessionScreenIsLocked"] as? Bool ?? false
+    }
+
+    public var isSessionActive: Bool {
+        // kCGSessionOnConsoleKey is a C macro, which Swift can't import.
+        guard let session = CGSessionCopyCurrentDictionary() as? [String: Any] else { return false }
+        return session["kCGSSessionOnConsoleKey"] as? Bool ?? false
     }
 }
 

@@ -38,6 +38,9 @@ typedef NS_ENUM(NSInteger, TBDisplayState) {
 - (BOOL)setAutoBrightness:(BOOL)enabled;
 @property (nonatomic, readonly) float brightness;   // 0...1
 - (BOOL)setBrightness:(float)value;
+/// The same settings, nil when corebrightnessd didn't answer with a valid value: the plain properties read as NO and 0 then.
+@property (nonatomic, readonly, nullable) NSNumber *autoBrightnessValue;
+@property (nonatomic, readonly, nullable) NSNumber *brightnessValue;
 @property (nonatomic, readonly) float physicalNits; // actual light output, 0 when the panel is off
 @property (nonatomic, readonly) float minNits;
 @property (nonatomic, readonly) float maxNits;
@@ -45,9 +48,10 @@ typedef NS_ENUM(NSInteger, TBDisplayState) {
 
 // TouchBarServer channel
 @property (nonatomic, readonly) NSInteger dimmingStep; // 0 = not dimmed
-- (void)undim;
-- (void)turnOn;
-- (void)turnOff;
+// These return NO when TouchBarServer refuses.
+- (BOOL)undim;
+- (BOOL)turnOn;
+- (BOOL)turnOff;
 /// Called on the main queue whenever the panel turns on or off.
 - (void)setDisplayStateHandler:(void (^)(TBDisplayState state))handler;
 

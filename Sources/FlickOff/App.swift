@@ -180,6 +180,12 @@ struct MenuView: View {
                         .foregroundStyle(.orange)
                 }
 
+                if c.panelControlFailed {
+                    Text(L("error.panelControlDenied"))
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+
                 Picker(L("mode.label"), selection: $c.mode) {
                     ForEach(Mode.allCases) { Text($0.title).tag($0) }
                 }
@@ -322,17 +328,18 @@ final class DiagnosticsModel: ObservableObject {
     }
 
     func run(_ kind: ProbeKind) {
-        guard running == nil, Controller.shared.compatibility.isSupported else { return }
+        let controller = Controller.shared
+        guard running == nil, controller.compatibility.isSupported else { return }
         running = kind
-        Controller.shared.enforcementPaused = true
+        let runner = self.runner
+        let litThePanel = controller.beginProbe { runner.recover(from: kind, panelMayLight: $0) }
         Task {
+            // Let a panel that was dark come up first, so the test starts from something visible.
+            if litThePanel { await ProbeRunner.sleep(0.5) }
             let outcome = await runner.perform(kind)
-            await MainActor.run {
-                self.outcomes[kind] = outcome
-                self.running = nil
-                Controller.shared.enforcementPaused = false
-                Controller.shared.applySettings()
-            }
+            self.outcomes[kind] = outcome
+            self.running = nil
+            controller.endProbe()
         }
     }
 

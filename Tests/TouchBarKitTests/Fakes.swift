@@ -5,6 +5,8 @@ import Foundation
 final class FakeTouchBar: TouchBarControlling {
     var autoWritesSucceed = true
     var brightnessWritesSucceed = true
+    var panelWritesSucceed = true
+    var readsFail = false
     var autoBrightness = true
     var brightness: Float = 0.3
     var physicalNits: Float = 100
@@ -14,6 +16,11 @@ final class FakeTouchBar: TouchBarControlling {
     var dimmingStep = 0
     private(set) var calls: [String] = []
     private var panelStateHandler: (() -> Void)?
+
+    var brightnessState: BrightnessState? {
+        guard !readsFail, brightness.isFinite, (0...1).contains(brightness) else { return nil }
+        return BrightnessState(auto: autoBrightness, level: brightness)
+    }
 
     func setAutoBrightness(_ enabled: Bool) -> Bool {
         calls.append("auto=\(enabled)")
@@ -29,19 +36,25 @@ final class FakeTouchBar: TouchBarControlling {
         return true
     }
 
-    func undim() {
+    func undim() -> Bool {
         calls.append("undim")
+        guard panelWritesSucceed else { return false }
         dimmingStep = 0
+        return true
     }
 
-    func turnOn() {
+    func turnOn() -> Bool {
         calls.append("on")
+        guard panelWritesSucceed else { return false }
         panelState = .on
+        return true
     }
 
-    func turnOff() {
+    func turnOff() -> Bool {
         calls.append("off")
+        guard panelWritesSucceed else { return false }
         panelState = .off
+        return true
     }
 
     func onPanelStateChange(_ handler: @escaping () -> Void) {
@@ -63,6 +76,7 @@ final class FakeSystemState: SystemStateProviding {
     var isLidClosed = false
     var isBuiltInDisplayAsleep = false
     var isScreenLocked = false
+    var isSessionActive = true
 }
 
 final class FakeLoginItem: LoginItemControlling {
@@ -122,9 +136,10 @@ final class Harness {
 
     func makeController(
         compatibility: CompatibilityReport = .supported,
-        bundlePath: String = "/Applications/FlickOff.app"
+        bundlePath: String = "/Applications/FlickOff.app",
+        reconnect: (@MainActor () -> Controller.Connection)? = nil
     ) -> Controller {
         Controller(touchBar: touchBar, compatibility: compatibility, system: system, loginItem: loginItem,
-                   defaults: defaults, bundlePath: bundlePath)
+                   defaults: defaults, bundlePath: bundlePath, reconnect: reconnect)
     }
 }
