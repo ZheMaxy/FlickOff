@@ -19,7 +19,8 @@ for path in target.rglob('*'):
     kind = subprocess.check_output(['file', '-b', str(path)], text=True)
     if 'Mach-O' not in kind:
         continue
-    subprocess.run(['lipo', '-verify_arch', arch, str(path)], check=True)
+    # Apple lipo treats everything after -verify_arch as an architecture list.
+    subprocess.run(['lipo', str(path), '-verify_arch', arch], check=True)
     checked.add(str(path.relative_to(target)))
 if not checked:
     raise SystemExit('Sparkle framework contains no executable code')
