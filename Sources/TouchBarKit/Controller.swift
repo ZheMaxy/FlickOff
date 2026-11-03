@@ -126,7 +126,7 @@ public final class Controller: ObservableObject {
     /// Waits between attempts to reach services that weren't up yet: about a minute in total.
     static let reconnectDelays: [TimeInterval] = [1, 2, 4, 8, 15, 30]
     /// One refused call can be a service restarting; at the 0.5-second tick this is a couple of seconds of refusals.
-    static let refusalsBeforeWarning = 4
+    nonisolated static let refusalsBeforeWarning = 4
 
     /// How far turning the panel off for idleness has got. corebrightnessd reports the new state a moment
     /// after a call, so "on" only counts as someone else lighting the panel once "off" has been seen.

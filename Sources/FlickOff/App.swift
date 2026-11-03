@@ -182,6 +182,7 @@ extension Controller {
 struct MenuView: View {
     @ObservedObject var c: Controller
     @ObservedObject var updates = UpdateController.shared
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -195,10 +196,10 @@ struct MenuView: View {
             }
 
             if let problem = c.compatibility.problem {
-                GuideCard(guide: Guide(problem), labels: labels, perform: c.perform)
+                GuideCard(guide: Guide(problem), labels: labels, perform: perform)
             } else {
                 ForEach(Array(c.setupIssues.enumerated()), id: \.offset) { _, issue in
-                    GuideCard(guide: Guide(issue, labels), labels: labels, perform: c.perform)
+                    GuideCard(guide: Guide(issue, labels), labels: labels, perform: perform)
                 }
 
                 if c.controlFailed {
@@ -261,7 +262,7 @@ struct MenuView: View {
             Button(L("updates.check")) { updates.checkForUpdates() }
                 .disabled(!updates.canCheckForUpdates)
             HStack {
-                Button(L("diagnostics.menu")) { DiagnosticsWindow.show() }
+                Button(L("diagnostics.menu")) { perform(.runDiagnostics) }
                     .buttonStyle(.link)
                 Spacer()
                 Button(L("quit")) { NSApp.terminate(nil) }
@@ -278,6 +279,12 @@ struct MenuView: View {
     }
 
     private var labels: SettingsLabels { .shared }
+
+    private func perform(_ action: GuideAction) {
+        // The menu stays up when the app opens another window of its own, and would cover it.
+        if action == .runDiagnostics { dismiss() }
+        c.perform(action)
+    }
 
     /// One percent is the finest step the menu shows; anything finer only adds corebrightnessd writes.
     private var percentLevel: Binding<Double> {
@@ -409,6 +416,8 @@ final class DiagnosticsModel: ObservableObject {
             // Let a panel that was dark come up first, so the test starts from something visible.
             if litThePanel { await ProbeRunner.sleep(0.5) }
             let outcome = await runner.perform(kind)
+            // Off comes back as soon as the probe ends: keep the panel up long enough to see how it came out.
+            if litThePanel { await ProbeRunner.sleep(1.5) }
             self.outcomes[kind] = outcome
             self.running = nil
             controller.endProbe()
@@ -611,7 +620,9 @@ struct FlickOffApp: App {
         MenuBarExtra {
             MenuView(c: controller)
         } label: {
+            // Without a label VoiceOver reads out the symbol's name, such as "Brightness Higher".
             Image(systemName: updates.waitingUpdateVersion == nil ? controller.menuBarSymbol : "arrow.down.circle.fill")
+                .accessibilityLabel("FlickOff")
         }
         .menuBarExtraStyle(.window)
     }
