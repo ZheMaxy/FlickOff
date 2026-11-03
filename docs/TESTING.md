@@ -46,6 +46,17 @@ invalid stored levels, idle power-off with real posted input and an outside wake
 a second copy exiting, the controls window on reopening, and restoration of user
 preferences. The previously running installed app was reopened afterward.
 
+## The real update
+
+On the same machine, the installed build 4, which the installer had left owned by
+root, updated itself to build 5 through **Check for Updates…**, with the signed feed
+that was then published and an administrator's approval. Afterwards the app was still
+owned by root, its signature was valid, and its files were identical to the release
+ZIP that CI built and attested. The login item stayed enabled with no setup issues,
+the mode and level were kept, and **When idle** became **Stay lit**, the behaviour it
+had before. All checks in this document ran against those CI-built files, except the
+unit and hardware tests, which build from the same commit.
+
 ## The real menu
 
 Driven with real clicks on the same machine: the slider, the **When idle** list,
@@ -60,7 +71,13 @@ icon and as a button in the menu, with no alert until that button was pressed.
 ## Energy use
 
 With the menu closed and nothing changing, `top` over 60 seconds on battery measured
-about **0.10% CPU**, down from about 2.2% for build 4 in the same conditions.
+about **0.10% CPU**, down from about 2.2% for build 4 in the same conditions. The same
+holds for build 5 as installed by the update above.
+
+## Homebrew
+
+A local tap of this repository installed the cask into a temporary folder. The copy was
+owned by the user and had no quarantine flag, and it opened with no Gatekeeper prompt.
 
 The current login-item status is enabled; this read-only check does not establish
 that an actual logout/login cycle launches the app correctly.
@@ -102,9 +119,8 @@ cycle has not been performed.
 
 ## What this does not establish
 
-Not yet tried on real hardware: updating the actual installed app and checking its
-login item afterward, a real logout/login cycle, reconnecting when services really
-start late, a second user with fast user switching, and what touching a dark panel
+Not yet tried on real hardware: a real logout/login cycle, reconnecting when services
+really start late, a second user with fast user switching, and what touching a dark panel
 does. An outside wake is simulated by turning the panel on through the service.
 
 API return values and reported state do not measure visible light output. These

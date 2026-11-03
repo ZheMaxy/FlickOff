@@ -70,12 +70,12 @@ signing key reaches CI. See [update publishing](UPDATES.md) for the key itself.
 5. Try the update on a real installation with the feed that will be published:
 
    ```sh
-   (cd build/release-1.2.0-beta.1 && python3 -m http.server 8931 --bind 127.0.0.1) &
-   defaults write io.github.ZheMaxy.FlickOff SUFeedURL http://127.0.0.1:8931/appcast.xml
+   defaults write io.github.ZheMaxy.FlickOff SUFeedURL \
+       https://github.com/ZheMaxy/FlickOff/releases/download/v1.2.0-beta.1/appcast.xml
    ```
 
    Choose **Check for Updates…** in the installed app and install it. Check the version,
-   your settings and the login item, then stop the server and remove the override:
+   your settings and the login item, then remove the override:
 
    ```sh
    defaults delete io.github.ZheMaxy.FlickOff SUFeedURL
