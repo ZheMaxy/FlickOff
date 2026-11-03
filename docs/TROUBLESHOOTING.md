@@ -1,6 +1,11 @@
-# Troubleshooting
+# Touch Bar flickering, brightness and Off mode troubleshooting
 
-## Flickering continues
+Use this guide if your MacBook Pro Touch Bar keeps flashing, ignores a brightness
+change, or wakes after you turn its display off. For everyday controls, see
+[FlickOff's brightness and Off mode guide](../README.md); for first launch, see
+[installing FlickOff on macOS](INSTALL.md).
+
+## Touch Bar still flickers at low brightness
 
 Choose Manual, raise brightness, and leave **Don't dim when idle** enabled if
 idle dimming brings flicker back. If no comfortable level helps, try Off.
@@ -11,7 +16,7 @@ The workaround comes from observed low-brightness flicker on one M1 MacBook Pro.
 It does not diagnose the physical cause. Avoid repeated low-brightness probes if
 the flashing is uncomfortable.
 
-## Off comes back on briefly
+## Touch Bar turns back on after selecting Off
 
 macOS or another app can wake the panel. Callbacks and a 0.5-second timer turn it
 back off. Off is a software-enforced display state, not an electrical disconnect;
@@ -65,8 +70,8 @@ consistent labels. Nothing uploads automatically: Copy and Save stay local.
 ## “App Update Required” or a Rosetta warning
 
 Install the current Apple silicon build. The release executable must report
-`arm64` with `lipo -archs`; it does not need Rosetta. Version 1.0.1 explicitly
-requires native execution and verifies the architecture during packaging.
+`arm64` with `lipo -archs`; it does not need Rosetta. Current releases explicitly
+require native execution and verify the architecture during packaging.
 Intel smoke-test bundles are restricted to native Intel CI and have a separate
 Build Check identity so they cannot be mistaken for the release app.
 

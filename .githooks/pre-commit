@@ -2,7 +2,7 @@
 # Validate staged additions against credential and attribution rules.
 added=$(git diff --cached --no-color -U0 --diff-filter=AM | grep -E '^\+[^+]' || true)
 # Match prohibited attribution in names and additions; split patterns avoid matching this file.
-banned='[c]laude|[c]odex|[c]hat[ -]?[g]pt|[g]pt-?[0-9]|кл''од|Кл''од|ч''атгпт|Ч''атГПТ'
+banned=$'[c]laude|[c]odex|[c]hat[ -]?[g]pt|[g]pt-?[0-9]|\320\272\320\273\320\276\320\264|\320\232\320\273\320\276\320\264|\321\207\320\260\321\202\320\263\320\277\321\202|\320\247\320\260\321\202\320\223\320\237\320\242'
 named=$( { git diff --cached --name-only --diff-filter=AMR; printf '%s\n' "$added"; } | grep -Ei "$banned" || true)
 if [ -n "$named" ]; then
   echo "pre-commit: prohibited attribution in staged changes (lines cut to 60 chars):" >&2

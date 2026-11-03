@@ -14,7 +14,7 @@ visibility changes and release publication are separate from local builds.
    closed lid/external screen, lock/unlock, quitting and launch at login.
    Test low-brightness flicker only if comfortable. Record model/OS results.
 5. Check that incompatible systems show a report without enabling hardware probes.
-6. Review installation/recovery instructions, English/Russian README, license and
+6. Review installation/recovery instructions, README, license and
    commercial contact. Do not claim support for untested model/OS combinations.
 7. Scan the tracked tree and history for credentials, personal diagnostics and
    build products. Hooks are an initial check, not a complete history audit.

@@ -1,4 +1,8 @@
-# FlickOff
+# FlickOff — Touch Bar brightness control for MacBook Pro
+
+FlickOff is a macOS menu bar app for Apple silicon MacBook Pro models with a
+Touch Bar. Adjust Touch Bar brightness separately from the screen, keep a higher
+level when low brightness causes flickering, or turn off the Touch Bar display.
 
 **Keep your Mac. Lose the flicker.**
 
@@ -26,10 +30,10 @@ and it will not solve every kind of flicker. It gives you a practical way to
 avoid the troublesome brightness range or stop using the display while deciding
 what to do about hardware service.
 
-[По-русски](docs/README.ru.md) · [Installation](docs/INSTALL.md) ·
+[Installation](docs/INSTALL.md) ·
 [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](CONTRIBUTING.md)
 
-## Download
+## Download FlickOff for Apple silicon Macs
 
 [Download the Apple silicon beta](https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.1/FlickOff-1.1.0-arm64.zip)
 or [browse all releases](https://github.com/ZheMaxy/FlickOff/releases).
@@ -40,7 +44,7 @@ ad-hoc signed and not notarized; downloaded copies may need the
 [Gatekeeper steps](docs/INSTALL.md). Noncommercial use is free; commercial use
 requires a [paid license](COMMERCIAL.md).
 
-## Controls
+## Adjust brightness or turn off the Touch Bar display
 
 | Control | Behaviour |
 | --- | --- |
@@ -61,7 +65,7 @@ Mac is awake and unlocked. Crashes and force quits cannot guarantee restoration.
 Keeping an OLED panel lit continuously can increase power use and burn-in risk.
 Use the lowest stable brightness that works for you, or choose Off.
 
-## Compatibility
+## Supported MacBook Pro models and macOS versions
 
 | Requirement | Status |
 | --- | --- |
@@ -76,6 +80,41 @@ does not establish hardware support. The app uses private Apple frameworks;
 macOS updates may change them. On an incompatible system it shows a report and
 disables hardware controls. Read-only checks cannot prove that writes will work
 or that visible flickering will stop.
+
+## Touch Bar flickering and brightness FAQ
+
+### How do I change Touch Bar brightness without changing screen brightness?
+
+Open FlickOff from the menu bar, select **Manual**, and move the brightness
+slider. It adjusts the Touch Bar itself. Your MacBook's main screen brightness
+is controlled separately by macOS.
+
+### Can FlickOff help when my Touch Bar flickers at low brightness?
+
+On the author's M1 MacBook Pro, a higher fixed brightness avoids the range that
+triggers flickering. Try Manual at a comfortable higher level, and keep
+**Don't dim when idle** enabled if idle dimming brings it back. If that does not
+help, try Off or seek hardware service. This is a workaround, not a panel repair.
+
+### How do I turn off the Touch Bar without disabling Touch ID?
+
+Choose **Off**. FlickOff keeps the Touch Bar display dark while it runs;
+Touch ID and touch input remain available. Setting brightness to 0% only selects
+the minimum lit brightness. See [Off mode troubleshooting](docs/TROUBLESHOOTING.md)
+if the display wakes briefly.
+
+### Does FlickOff support M1 and M2 MacBook Pro?
+
+The M1 13-inch MacBook Pro (2020) has been tested on macOS 27.2. The M2 13-inch
+model is a candidate, but has not been verified. Intel Macs and Macs without a
+physical Touch Bar are outside this release's scope. Check the support table
+above before downloading.
+
+### Is FlickOff free to use?
+
+Noncommercial use is free under PolyForm Noncommercial 1.0.0. Business and other
+commercial use require a [separate paid license](COMMERCIAL.md), subject to the
+noncommercial license's terms and exceptions.
 
 ## Build and run
 

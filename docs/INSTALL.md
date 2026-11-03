@@ -1,8 +1,12 @@
-# Install FlickOff
+# Install FlickOff — Touch Bar brightness control for macOS
 
 You need an Apple silicon MacBook Pro with a Touch Bar. The build target is
 macOS 13+, but only the M1 model has been used to validate the original hardware
 behaviour. The app checks private API compatibility on every launch.
+
+FlickOff controls the Touch Bar display separately from the main screen. See
+the [brightness controls and flickering FAQ](../README.md) before choosing
+Manual or Off.
 
 ## Download
 

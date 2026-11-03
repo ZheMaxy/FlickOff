@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Validate commit messages against the repository attribution rule.
-banned='[c]laude|[c]odex|[c]hat[ -]?[g]pt|[g]pt-?[0-9]|кл''од|Кл''од|ч''атгпт|Ч''атГПТ'
+banned=$'[c]laude|[c]odex|[c]hat[ -]?[g]pt|[g]pt-?[0-9]|\320\272\320\273\320\276\320\264|\320\232\320\273\320\276\320\264|\321\207\320\260\321\202\320\263\320\277\321\202|\320\247\320\260\321\202\320\223\320\237\320\242'
 if grep -Eiq "$banned" "$1"; then
   echo "commit-msg: prohibited attribution in the message, rephrase it:" >&2
   grep -Ei "$banned" "$1" | cut -c1-72 >&2

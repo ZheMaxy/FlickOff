@@ -55,7 +55,7 @@ struct SetupTests {
 
     @Test func cleansTypesettingCharacters() {
         #expect(SystemSettingsNames.clean("System\u{ad}einstellungen") == "Systemeinstellungen")
-        #expect(SystemSettingsNames.clean("Объекты входа и\u{a0}расширения") == "Объекты входа и расширения")
+        #expect(SystemSettingsNames.clean("Login Items &\u{a0}Extensions") == "Login Items & Extensions")
     }
 }
 
