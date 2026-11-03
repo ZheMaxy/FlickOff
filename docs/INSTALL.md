@@ -25,6 +25,26 @@ app itself does not need administrator access to control brightness.
 You do not need an Apple Developer account or subscription. The installer asks
 for your Mac's administrator authorization, not an Apple Developer login.
 
+## Install with Homebrew
+
+```sh
+brew tap zhemaxy/flickoff https://github.com/ZheMaxy/FlickOff
+brew install --cask zhemaxy/flickoff/flickoff
+```
+
+FlickOff isn't notarized, because that takes a paid Apple membership. Installing
+from this tap is your decision to trust this project, so the cask removes macOS's
+quarantine flag and the app opens without the first-launch steps below. Homebrew
+itself doesn't vouch for it: its own catalogue only takes notarized apps.
+
+The app stays yours rather than the system's, so neither this nor later updates ask
+for an administrator's password. FlickOff keeps updating itself with signed updates
+as usual, not through `brew upgrade`.
+
+Use either this or the installer. Homebrew refuses to replace a copy the installer
+put in Applications, so uninstall that one first. To remove the app, run
+`brew uninstall --cask flickoff`; `--zap` also deletes its settings.
+
 ## First use and launch at login
 
 The first launch enables **Launch at login** and **Check for updates automatically**,
@@ -88,6 +108,19 @@ python3 scripts/make_installer.py --output build/local-installer
 
 Open the generated disk image and **Install FlickOff**. The build does not install it.
 `./build.sh test` runs the ordinary automated suite without changing the panel.
+
+## Check a download
+
+Starting with 1.2.0, CI builds the release files and records where they came from.
+With the [GitHub CLI](https://cli.github.com) you can check that a file was built by
+this repository, and from which commit:
+
+```sh
+gh attestation verify FlickOff-1.2.0-arm64.dmg --repo ZheMaxy/FlickOff
+```
+
+`SHA256SUMS` in each release lists the checksums. Neither replaces notarization, but
+they don't depend on a paid Apple membership.
 
 ## Quit or uninstall
 

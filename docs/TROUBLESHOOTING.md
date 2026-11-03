@@ -97,8 +97,6 @@ consistent labels. Nothing uploads automatically: Copy and Save stay local.
 Install the current Apple silicon build. The release executable must report
 `arm64` with `lipo -archs`; it does not need Rosetta. Current releases explicitly
 require native execution and verify the architecture during packaging.
-Intel smoke-test bundles are restricted to native Intel CI and have a separate
-Build Check identity so they cannot be mistaken for the release app.
 
 This warning can be triggered by an older Intel test build with the same app
 identity. Check the installed binary rather than assuming the current release

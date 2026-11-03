@@ -57,7 +57,15 @@ owned by root, as the installer leaves the real app. It asks for an administrato
 to set up the copy, again from Sparkle to replace it, and once more to delete it.
 
 `python3 Tests/Integration/release_checks_test.py` checks the guards in
-`make_release.py`. It needs no signing key and runs in CI.
+`make_release.py`, the rewriting in `publish.py` and the feed check. It needs no
+signing key and runs in CI. So does `python3 Tests/Integration/hooks_test.py`, which
+checks what the repository hooks let through.
+
+## All at once
+
+`python3 scripts/preflight.py` runs the hardware suite, the built-app checks, the
+installer checks and the updater checks on a committed tree, quitting and reopening
+the running app, and records the pass that `make_release.py` requires.
 
 ## Installer
 
@@ -71,7 +79,7 @@ architecture, evaluate Installer requirements without installing, and execute
 upgrade guards against isolated fixtures. Postinstall launch routing is checked
 with stubbed system commands. The disk image is mounted read-only and the native
 installer's read-only self-test is run. No administrator access or panel writes
-are involved. CI performs these checks with its separate native Intel identity.
+are involved. CI performs these checks too.
 
 Actual installation and its administrator prompt require a coordinated local
 test. Verify the existing app quits, settings survive replacement, FlickOff

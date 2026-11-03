@@ -89,6 +89,21 @@ main executable is arm64-only. `SUVerifyUpdateBeforeExtraction` and
 `SUEnableSystemProfiling` is false. The owner's signing key is kept in macOS
 Keychain; only its public key is in Info.plist.
 
+## Releases
+
+The Release build workflow builds the ZIP and the disk image and attests them. It
+has no signing key. `scripts/preflight.py` runs what needs a Touch Bar or the key on
+a real Mac; it is not a self-hosted runner, which in a public repository would let
+code from a fork's pull request run there. `scripts/publish.py` verifies the
+attestation, signs the same files and uploads them, and separately publishes the
+feed, because changing `appcast.xml` on `main` is the deployment. Feed items can name
+a channel and a phased rollout; the app's `allowedChannels(for:)` follows **Include
+beta versions**.
+
+Homebrew installs the same ZIP through `Casks/flickoff.rb`, which this repository
+serves as its own tap. The cask removes the quarantine flag, since the app isn't
+notarized; that app stays owned by the user, so Sparkle needs no administrator.
+
 ## Installation
 
 `scripts/make_installer.py` creates a disk image containing Install FlickOff.app.

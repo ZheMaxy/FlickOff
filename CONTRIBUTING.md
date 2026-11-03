@@ -21,6 +21,8 @@ checked at runtime.
 
 - Swift 6.0+ is required. Run `./build.sh test` for ordinary tests and `./build.sh`
   for an arm64 release bundle, signature verification and read-only smoke checks.
+- To try a change in CI, workflows included, before it reaches `main`, push it to a
+  `ci-check/` branch.
 - Tests that change brightness are opt-in: quit all app copies before running
   `TB_HARDWARE_TESTS=1 ./build.sh test` on supported hardware. Never enable these
   tests in hosted CI. `TB_API_TESTS=1` enables a read-only live selector check.
@@ -44,5 +46,6 @@ Sparkle is pinned exactly, including its SwiftPM checksum and Package.resolved.
 Preserve its third-party license notices and vendor code signatures when
 embedding the framework. Every helper must support the build architecture.
 Changes to the updater must pass the signed-feed/tampered-archive/installation
-checks described in docs/UPDATES.md. Release signing happens on the owner's Mac
-through Keychain; private signing keys must never enter the repository or CI.
+checks described in docs/UPDATES.md. CI builds and attests release files, and their
+signing happens on the owner's Mac through Keychain; private signing keys must never
+enter the repository or CI. See docs/RELEASING.md.

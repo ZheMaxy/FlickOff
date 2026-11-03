@@ -35,6 +35,16 @@ app and FlickOff use local ad-hoc signatures rather than Developer ID signatures
 **You do not need an Apple Developer account or subscription to install it.**
 Noncommercial use is free; commercial use requires a [paid license](COMMERCIAL.md).
 
+### Or install with Homebrew
+
+No first-launch steps and no administrator password. See
+[what this means](docs/INSTALL.md#install-with-homebrew).
+
+```sh
+brew tap zhemaxy/flickoff https://github.com/ZheMaxy/FlickOff
+brew install --cask zhemaxy/flickoff/flickoff
+```
+
 ## Why it exists
 
 **A flickering Touch Bar shouldn't ruin a perfectly usable MacBook.**
@@ -173,12 +183,11 @@ For a managed environment reporting `sandbox_apply: Operation not permitted`,
 use `SWIFTPM_DISABLE_SANDBOX=1 ./build.sh` to disable SwiftPM's nested build
 sandbox. Ordinary builds leave it enabled. Release builds omit debug information.
 
-CI runs native tests on an Intel macOS runner and separately cross-compiles the
-arm64 release target. Its disposable test bundle has a separate identifier;
-Intel builds are blocked outside native Intel CI. A weekly job runs the tests
-natively on arm64, with a read-only check of the private APIs on current macOS
-images. Local release builds require arm64 and native execution without Rosetta.
-Hardware support is unchanged.
+Every push builds and tests natively on arm64 in CI, including a read-only check
+of the private APIs and validation of the installer. The newest macOS image runs
+the same weekly, the update feed is checked daily, and links and scripts are linted
+on every change. CI runners have no Touch Bar: `scripts/preflight.py` runs the
+hardware checks on a real Mac, and a release can't be signed without them.
 
 Local builds are ad-hoc signed, not Developer ID signed or notarized. See
 [installation and Gatekeeper](docs/INSTALL.md) before sharing a binary.
@@ -190,8 +199,9 @@ enabled by default and can be switched off. An update found in the background
 shows on the menu bar icon and at the bottom of the menu. Sparkle downloads
 updates and handles installation from inside the app. The installer leaves the
 app owned by the system, so installing an update asks for an administrator's
-password. Archives and the update feed are Ed25519 signed and verified before
-installation. Update checks contact GitHub; system profiling is disabled. The
+password; a Homebrew installation doesn't. **Include beta versions** decides whether
+betas are offered once stable releases exist. Archives and the update feed are
+Ed25519 signed and verified before installation. Update checks contact GitHub; system profiling is disabled. The
 private signing key is never shipped.
 
 ## Diagnostics and tests

@@ -25,42 +25,85 @@ users read is `appcast.xml` on `main`: other pushes reach nobody until it change
 7. Scan the tracked tree and history for credentials, personal diagnostics and
    build products. Hooks are an initial check, not a complete history audit.
 
-## Package and publish
+## Build, sign and publish
 
-Local builds are arm64, ad-hoc signed and not notarized. The initial public beta
-states this limitation in its download instructions and release notes. A stable
-downloadable release should use Developer ID signing and notarization, with
-credentials kept outside the repository, and complete the manual validation
-above. Check current Apple distribution requirements before changing signing.
+Hosted CI builds the files and records where they came from, this Mac runs what needs
+a Touch Bar and signs them, and publishing the feed is a separate last step. No
+signing key reaches CI. See [update publishing](UPDATES.md) for the key itself.
 
-Remove notes in README and INSTALL about what the current beta lacks once the
-release includes it. Add the changes to `CHANGELOG.md`, raise `CFBundleVersion` in `Resources/Info.plist`,
-and write what changed for users in a plain-text file. The update alert shows it.
-Then build the disk image for direct downloads and the ZIP for in-app updates:
+1. Add the changes to `CHANGELOG.md` and raise `CFBundleVersion` and, if it changes,
+   `CFBundleShortVersionString` in `Resources/Info.plist`. Remove notes in README and
+   INSTALL about what the current release lacks. Push to `main`.
 
-```sh
-python3 scripts/make_release.py --tag v1.2.0-beta.1 --notes notes.txt --output build/release-1.2.0-beta.1
-```
+2. Build the release files in CI:
 
-The script refuses a tag that doesn't match the app version, a build no newer than
-the one in `appcast.xml`, and missing notes. The output directory must not already
-contain an archive. The DMG with the
-native installer app is the primary download; validate its license screen,
-administrator authorization and upgrade behaviour before release.
-The app-only ZIP
-preserves framework symlinks and includes license notices inside the app's
-Resources. The script verifies the native architecture and code signature,
-signs the archive and appcast with the owner's Keychain key, verifies both
-signatures, and writes SHA256SUMS. See [update publishing](UPDATES.md).
+   ```sh
+   gh workflow run release.yml --ref main
+   gh run list --workflow release.yml --limit 1   # note the run ID, wait for it to pass
+   ```
 
-Upload the DMG, ZIP and SHA256SUMS as assets of the matching GitHub Release. Publish
-the generated appcast.xml unchanged at the repository root once its download
-URL works. Do not add loose files alongside the app inside the updater ZIP.
-Download the published archive/feed and verify their checksum and signatures.
+3. Run what CI can't, against the app CI built:
 
-Before publishing a feed for a change to the updater or the installer, run
-`python3 Tests/Integration/update_test.py --root-owned`: the installer leaves the
-app owned by root, which the ordinary update checks don't cover.
+   ```sh
+   gh run download <run ID> --name release-files --dir build/ci
+   ditto -x -k build/ci/FlickOff-*.zip build/ci
+   python3 scripts/preflight.py --app build/ci/FlickOff.app
+   ```
+
+   Add `--root-owned` when the updater or the installer changed. It asks for an
+   administrator several times. `make_release.py` refuses a commit without a pass.
+
+4. Write what changed for users in a plain-text file, which the update alert shows,
+   and the release page in Markdown. Then check, sign and upload:
+
+   ```sh
+   python3 scripts/publish.py upload --run <run ID> --tag v1.2.0-beta.1 \
+       --title "FlickOff 1.2.0 — Public Beta 1" \
+       --notes notes.txt --body release.md --output build/release-1.2.0-beta.1
+   ```
+
+   This verifies the attestation, refuses a tag that doesn't match the app version or
+   a build no newer than the one in `appcast.xml`, signs the files CI built, uploads
+   them as a prerelease and checks what can now be downloaded. Add `--stable` for a
+   stable release. Nobody is offered the release yet.
+
+5. Try the update on a real installation with the feed that will be published:
+
+   ```sh
+   (cd build/release-1.2.0-beta.1 && python3 -m http.server 8931 --bind 127.0.0.1) &
+   defaults write io.github.ZheMaxy.FlickOff SUFeedURL http://127.0.0.1:8931/appcast.xml
+   ```
+
+   Choose **Check for Updates…** in the installed app and install it. Check the version,
+   your settings and the login item, then stop the server and remove the override:
+
+   ```sh
+   defaults delete io.github.ZheMaxy.FlickOff SUFeedURL
+   ```
+
+6. Offer it to users:
+
+   ```sh
+   python3 scripts/publish.py feed --output build/release-1.2.0-beta.1
+   ```
+
+   This commits the feed unchanged, with the updated download links and Homebrew cask,
+   pushes `main` and waits until the feed URL serves it. The **Update feed** workflow
+   then checks it again with only the public key, and repeats that daily.
+
+Do not add loose files alongside the app inside the updater ZIP. It preserves
+framework symlinks and includes license notices inside the app's Resources.
+
+### Who gets a release
+
+A release without `--channel` goes to everyone. `--channel beta` on the upload step
+offers it only to build 5 and later with **Include beta versions** on, and the feed
+keeps the newest item of the other channel so nobody is left behind. Until a stable
+release exists there's no reason to split them.
+
+`--phased-rollout-hours 24` on the upload step offers it to one of seven groups of
+users per interval, which leaves time to stop a bad release: publish a new feed
+without it before the groups run out.
 
 Release notes should give the exact tested model/OS pairs, private API
 limitations, signing status and limits of flicker mitigation. Use a prerelease

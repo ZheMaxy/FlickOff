@@ -29,19 +29,12 @@ and user-switching sequences still need coordinated system validation.
 
 The arm64 release bundle builds successfully. Its ad-hoc signature, plist/string
 files, setup CLI smoke test, workflow YAML and local documentation links were
-checked. An earlier CI run passed on a GitHub-hosted ARM macOS runner. Later
-runs were cancelled before any step ran because GitHub could not allocate an
-ARM runner; this was not a build or test failure.
+checked.
 
-CI uses the explicit `macos-15-intel` pool on every push. It runs ordinary tests and a native
-x86_64 bundle smoke check, then separately cross-compiles the arm64 release target.
-A weekly and on-demand job runs the tests natively on arm64 with the read-only
-private API contract.
-`TB_BUILD_ARCH=x86_64` is accepted only on native Intel CI, whose bundle uses a
-separate `io.github.ZheMaxy.FlickOff.BuildCheck` identifier. Local builds require
-arm64 and the app requests native execution without Rosetta. The build verifies
-the resulting Mach-O architecture. This does not establish support for Intel Touch Bar hardware.
-Check the latest commit's CI status for its result.
+Every push runs the tests with the read-only private API contract, the bundle smoke
+check and the installer checks natively on arm64 on `macos-15`. `macos-26` runs the
+tests weekly as well. Selector checks passing on those images say nothing about whether
+writes work there. The result for the latest commit is on its CI status.
 
 ## Built-application integration
 

@@ -22,12 +22,19 @@ Only the latest release gets fixes.
   installer's package scripts run as root, after you approve the administrator
   prompt.
 
+- Starting with 1.2.0, CI builds the release files and attests them, and the feed
+  is checked daily with only the public key.
+
 ## Current limits
 
-Betas are ad-hoc signed and not notarized by Apple, and the installer package has
-no Developer ID signature, so macOS can't vouch for the first download. Check it
-against `SHA256SUMS` from the same release:
+Betas are ad-hoc signed and not notarized by Apple, which takes a paid membership, and
+the installer package has no Developer ID signature, so macOS can't vouch for the first
+download. You can check it yourself:
 
 ```sh
+gh attestation verify FlickOff-1.2.0-arm64.dmg --repo ZheMaxy/FlickOff
 shasum -a 256 -c SHA256SUMS --ignore-missing
 ```
+
+The Homebrew cask removes macOS's quarantine flag because of this, so Gatekeeper
+doesn't check that copy at all. Installing from this tap means trusting this project.

@@ -17,33 +17,19 @@ into the repository or place it in command arguments.
 
 ## Build, package and sign
 
-1. Increment CFBundleVersion on every update; Sparkle uses this number and
-   `make_release.py` refuses one that isn't above the build in `appcast.xml`. Set
-   the human-readable CFBundleShortVersionString and check platform requirements.
-2. Run `./build.sh`, the live hardware suite and integration checks appropriate
-   to the change. Keep the app's bundle identifier and signing key stable.
-3. Write what changed for users in a plain-text file; the update alert shows it.
-   Create a fresh output directory and run:
+[RELEASING.md](RELEASING.md) has the steps. CI builds an app-only ZIP for Sparkle and
+a disk image with a native installer app for first installation, and attests both.
+`scripts/publish.py` verifies them and has `scripts/make_release.py` sign the ZIP,
+generate and sign appcast.xml, and write SHA256SUMS. It reads the private key directly
+from Keychain through Sparkle's pinned signing tool. macOS may ask you to authorize
+that tool's key access.
 
-```sh
-python3 scripts/make_release.py --tag v1.2.0-beta.1 --notes notes.txt --output build/release-1.2.0-beta.1
-```
+Increment CFBundleVersion on every update, because Sparkle uses this number. Keep the
+app's bundle identifier and signing key stable. Byte changes to the feed require
+re-signing it.
 
-The tag must match the app version. The script makes an app-only ZIP for Sparkle and a disk image with a native
-installer app for first installation. The installer embeds a system package.
-The script preserves framework symlinks, signs the ZIP, generates and
-signs appcast.xml, verifies both signatures, and writes SHA256SUMS for the ZIP
-and installer. It reads the private key directly from Keychain through Sparkle's
-pinned signing tool. macOS may ask you to authorize that tool's key access.
-
-4. Validate the package and image with `Tests/Integration/installer_test.py` as
-   described in the integration README. Upload the DMG, ZIP and SHA256SUMS
-   to the matching GitHub Release. Verify the asset
-   URL is available, then copy the generated appcast.xml unchanged to the repo
-   root and publish it. Byte changes to the feed require re-signing it.
-5. Download the published archive/feed and verify their signatures and checksum.
-   Check a prior app version discovers the update and the current build reports
-   no newer version.
+`scripts/verify_feed.swift` checks a feed and its archives with only the public key
+from Info.plist, so it can run anywhere, including CI.
 
 The ZIP used for updates contains only FlickOff.app. License and dependency
 notices are embedded in the app's Resources. Extra loose files can interfere
@@ -69,8 +55,8 @@ actual update installation. It does not replace the user's installed app or
 run its Touch Bar controller. It uses the release signing key locally, so it is
 not a hosted CI test. CI compiles the test companion without running it.
 
-The installer leaves the app owned by root, so updating a real installation asks
-for an administrator. `python3 Tests/Integration/update_test.py --root-owned`
+The installer leaves the app owned by root, so updating such an installation asks
+for an administrator; a Homebrew installation stays with the user and doesn't. `python3 Tests/Integration/update_test.py --root-owned`
 covers that path with a temporary root-owned copy. A person has to answer its
 administrator prompts.
 

@@ -14,6 +14,10 @@ User-visible changes. The build number is what the menu shows after the version.
   the menu bar icon is hidden.
 - An update found in the background shows on the menu bar icon and in the menu,
   instead of an alert that could open unnoticed behind other windows.
+- **Include beta versions** setting, for when stable releases exist.
+- Installing with Homebrew from this repository: no first-launch steps and no
+  administrator password.
+- Release files are built in CI, which records where they came from.
 - The menu and reports show the build number. Reports also name the mode, level
   and idle setting.
 
