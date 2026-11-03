@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # Actions are pinned to commits, so nothing else would ever move them.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  # Sparkle delivers every update. See "Updating dependencies and releases" in CONTRIBUTING.md before merging.
+  - package-ecosystem: swift
+    directory: /
+    schedule:
+      interval: weekly

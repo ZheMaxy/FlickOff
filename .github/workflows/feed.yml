@@ -1,0 +1,55 @@
+name: Update feed
+
+# appcast.xml is what users' apps read, so changing it is the actual deployment.
+on:
+  push:
+    branches: [main, 'ci-check/**']
+    paths:
+      - appcast.xml
+      - Resources/Info.plist
+      - scripts/verify_feed.swift
+      - .github/workflows/feed.yml
+  pull_request:
+    paths:
+      - appcast.xml
+      - Resources/Info.plist
+      - scripts/verify_feed.swift
+      - .github/workflows/feed.yml
+  schedule:
+    # Catches a deleted release asset, or a feed users can no longer verify.
+    - cron: '41 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  feed:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Signatures and archives, with only the public key
+        run: swift scripts/verify_feed.swift appcast.xml Resources/Info.plist --archives
+      - name: A changed feed offers a newer build
+        if: github.event_name == 'push'
+        run: |
+          git show HEAD^:appcast.xml > previous-appcast.xml
+          if cmp -s appcast.xml previous-appcast.xml; then
+            echo "The feed did not change in this commit."
+          else
+            swift scripts/verify_feed.swift appcast.xml Resources/Info.plist --newer-than previous-appcast.xml
+          fi
+      - name: The URL apps read serves this feed
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # The raw content CDN can lag a push by a few minutes.
+          for attempt in 1 2 3 4 5 6 7 8; do
+            curl -fsSL https://raw.githubusercontent.com/ZheMaxy/FlickOff/main/appcast.xml -o live-appcast.xml \
+              && cmp appcast.xml live-appcast.xml && exit 0
+            sleep 60
+          done
+          exit 1

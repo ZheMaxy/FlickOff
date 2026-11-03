@@ -7,16 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 APP=build/FlickOff.app
-ARCH="${TB_BUILD_ARCH:-arm64}"
-case "$ARCH" in
-    arm64|x86_64) ;;
-    *) echo "error: TB_BUILD_ARCH must be arm64 or x86_64" >&2; exit 2 ;;
-esac
-# Intel bundles are disposable CI smoke checks, never local release candidates.
-if [[ "$ARCH" == x86_64 && ( "${CI:-}" != true || "$(uname -m)" != x86_64 ) ]]; then
-    echo "error: Intel test bundles require native Intel CI; local builds must use arm64" >&2
-    exit 2
-fi
+ARCH=arm64
 
 # The Command Line Tools keep the Swift Testing macro plugin outside the default search path.
 DEV_DIR="${DEVELOPER_DIR:-$(xcode-select -p)}"
@@ -45,11 +36,6 @@ build_app() {
     mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
     cp "$bin" "$APP/Contents/MacOS/FlickOff"
     cp Resources/Info.plist "$APP/Contents/Info.plist"
-    if [[ "$ARCH" == x86_64 ]]; then
-        /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier io.github.ZheMaxy.FlickOff.BuildCheck' "$APP/Contents/Info.plist"
-        /usr/libexec/PlistBuddy -c 'Set :CFBundleName FlickOff Build Check' "$APP/Contents/Info.plist"
-        /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName FlickOff Build Check' "$APP/Contents/Info.plist"
-    fi
     local actual_arch
     actual_arch="$(lipo -archs "$APP/Contents/MacOS/FlickOff")"
     if [[ "$actual_arch" != "$ARCH" ]]; then

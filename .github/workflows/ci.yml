@@ -2,7 +2,8 @@ name: Build and test
 
 on:
   push:
-    branches: [main]
+    # Push to a ci-check/ branch to try a change, workflows included, before it reaches main.
+    branches: [main, 'ci-check/**']
     paths-ignore:
       - '**/*.md'
       - appcast.xml
@@ -18,38 +19,43 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # Hosted runners have no Touch Bar, so hardware tests stay off; see scripts/preflight.py for those.
   macos:
     if: github.event_name != 'schedule'
-    # Explicit Intel pool avoids the capacity-limited macOS arm64 queue.
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Toolchain
         run: swift --version
-      - name: Native tests, bundle and read-only smoke checks
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build
+          key: swiftpm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Package.resolved', 'Package.swift') }}
+      - name: Tests, private API contract, bundle and read-only smoke checks
         env:
-          TB_BUILD_ARCH: x86_64
+          TB_API_TESTS: '1'
         run: ./build.sh
-      - name: Cross-compile the arm64 release target
-        run: swift build -c release --arch arm64 -debug-info-format none
       - name: Build and validate the native installer without installing
         run: |
           python3 scripts/make_installer.py --output build/installer-ci
           python3 Tests/Integration/installer_test.py --pkg build/installer-ci/*.pkg --dmg build/installer-ci/*.dmg
-      - name: Check integration-test sources without hardware writes
+      - name: Check integration-test sources and release guards without hardware writes
         run: |
           python3 -m py_compile Tests/Integration/*.py scripts/*.py
           python3 Tests/Integration/release_checks_test.py
           xcrun clang -fsyntax-only -fobjc-arc -I Sources/TBPrivate/include Tests/Integration/PanelProbe.m
           xcrun clang -fsyntax-only -fobjc-arc -F build/FlickOff.app/Contents/Frameworks Tests/Integration/UpdateProbe.m
 
-  # What ships is arm64 and the app depends on private APIs, but this queue has been too limited to
-  # hold up every push. Read-only: the runners have no Touch Bar and hardware tests stay off.
-  native-arm64:
+  # The newest runner image, and the same again weekly so an API change shows up without a commit.
+  newer-macos:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
@@ -58,12 +64,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Toolchain
         run: swift --version
-      - name: Native arm64 tests and the private API contract
+      - name: Tests and the private API contract
         env:
           TB_API_TESTS: '1'
         run: ./build.sh test

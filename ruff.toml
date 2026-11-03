@@ -1,0 +1,2 @@
+# The scripts run with whatever Python 3 a Mac has, which can be as old as the Command Line Tools' 3.9.
+target-version = "py39"

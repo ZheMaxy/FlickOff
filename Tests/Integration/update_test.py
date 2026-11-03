@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Verify signed feed discovery, tamper rejection and Sparkle installation in temp copies."""
 import argparse
-from functools import partial
 import http.server
-from pathlib import Path
 import plistlib
 import shlex
 import shutil
@@ -12,12 +10,14 @@ import tempfile
 import threading
 import time
 import uuid
+from functools import partial
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def run(*args, timeout=60, check=True):
-    r = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=timeout)
+    r = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=timeout, check=False)
     if check and r.returncode:
         raise RuntimeError(r.stdout + r.stderr)
     return r
@@ -45,7 +45,6 @@ def main():
     old_build = str(int(current_build) - 1)
     current_version = current_info['CFBundleShortVersionString']
     framework = app / 'Contents/Frameworks'
-    signer = ROOT / '.build/artifacts/sparkle/Sparkle/bin/sign_update'
     account = 'io.github.ZheMaxy.FlickOff'
     with tempfile.TemporaryDirectory(prefix='flickoff-updater-') as temp:
         temp = Path(temp)

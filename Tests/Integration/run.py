@@ -4,19 +4,19 @@ import argparse
 import ctypes
 import json
 import os
-from pathlib import Path
 import plistlib
 import signal
 import subprocess
 import tempfile
 import time
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DOMAIN = "io.github.ZheMaxy.FlickOff"
 
 
 def run(*args, check=True):
-    result = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=30)
+    result = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=30, check=False)
     if check and result.returncode:
         raise RuntimeError(f"{args[0]} exited {result.returncode}: {result.stderr.strip()}")
     return result
@@ -175,7 +175,7 @@ def main():
 
                 for raw, expected in [("-1", 0), ("2", 1)]:
                     before = launch("manual", raw)
-                    wait(lambda s: abs(s["level"] - expected) < 0.02, "saved brightness range clamping")
+                    wait(lambda s, want=expected: abs(s["level"] - want) < 0.02, "saved brightness range clamping")
                     finish(before)
                 check("real app clamps out-of-range launch preferences")
 
@@ -200,7 +200,7 @@ def main():
 
                 before = launch("manual")
                 wait(lambda s: not s["auto"] and abs(s["level"] - 0.8) < 0.02, "manual launch before a second copy")
-                second = subprocess.run([str(binary)], capture_output=True, text=True, timeout=15)
+                second = subprocess.run([str(binary)], capture_output=True, text=True, timeout=15, check=False)
                 assert second.returncode == 0, second.stderr
                 assert active.poll() is None, "second copy stopped the running app"
                 check("a second copy exits and leaves the running app in charge")

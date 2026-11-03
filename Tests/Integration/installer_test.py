@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """Inspect a native installer and exercise upgrade guards without installing it."""
 import argparse
-from pathlib import Path
 import plistlib
 import shlex
 import subprocess
 import tempfile
 import uuid
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
 def run(*args, check=True):
-    result = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=60)
+    result = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=60, check=False)
     if check and result.returncode:
         raise RuntimeError(result.stdout + result.stderr)
     return result

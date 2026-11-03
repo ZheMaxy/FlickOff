@@ -1,0 +1,46 @@
+name: Lint and links
+
+# Runs for every change: Markdown skips the build workflow, and this needs no Mac.
+on:
+  push:
+    branches: [main, 'ci-check/**']
+  pull_request:
+  schedule:
+    # Links rot with no commit to trigger a run.
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Shell scripts, including the installer's, which run as root
+        run: shellcheck build.sh .githooks/commit-msg .githooks/pre-commit Packaging/Installer/preinstall Packaging/Installer/postinstall
+      - name: Python
+        run: pipx run ruff==0.17.3 check scripts Tests/Integration
+
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --no-progress --max-retries 3 --include-fragments '**/*.md'
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

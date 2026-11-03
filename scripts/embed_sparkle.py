@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Embed the pinned framework, preserve signatures, and reject non-native helpers."""
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 app = Path(sys.argv[1])
 arch = sys.argv[2]

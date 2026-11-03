@@ -4,14 +4,13 @@ import argparse
 import base64
 import hashlib
 import html
-import os
-from pathlib import Path
 import plistlib
 import re
 import shutil
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,10 +32,8 @@ def main():
     build = info['CFBundleVersion']
     bundle_id = info['CFBundleIdentifier']
     arch = run('lipo', '-archs', app / 'Contents/MacOS/FlickOff').strip()
-    ci_check = arch == 'x86_64' and os.environ.get('CI') == 'true' and os.uname().machine == 'x86_64'
-    expected_id = 'io.github.ZheMaxy.FlickOff' + ('.BuildCheck' if ci_check else '')
-    if bundle_id != expected_id or (arch != 'arm64' and not ci_check):
-        raise SystemExit('Only the arm64 release or a native Intel CI check can be packaged')
+    if bundle_id != 'io.github.ZheMaxy.FlickOff' or arch != 'arm64':
+        raise SystemExit('Only the arm64 release can be packaged')
     if not isinstance(version, str) or not re.fullmatch(r'[0-9]+(?:\.[0-9]+){1,2}', version):
         raise SystemExit('CFBundleShortVersionString must be a dotted numeric version')
     if not isinstance(build, str) or not build.isascii() or not build.isdecimal() or len(build) > 9:
@@ -49,8 +46,7 @@ def main():
         raise SystemExit('Use a Developer ID Application identity for the installer app')
     run('codesign', '--verify', '--deep', '--strict', app)
     args.output.mkdir(parents=True, exist_ok=True)
-    suffix = '-build-check' if ci_check else ''
-    output = args.output.resolve() / f'FlickOff-{version}-{arch}{suffix}.pkg'
+    output = args.output.resolve() / f'FlickOff-{version}-{arch}.pkg'
     image = output.with_suffix('.dmg')
     if output.exists() or image.exists():
         raise SystemExit('Installer already exists; use a fresh output directory')
@@ -124,8 +120,8 @@ def main():
         (installer_resources / 'license.txt').write_text(license_text)
         (installer / 'Contents/Info.plist').write_bytes(plistlib.dumps({
             'CFBundleIdentifier': bundle_id + '.Installer',
-            'CFBundleName': 'FlickOff Installer' + (' Build Check' if ci_check else ''),
-            'CFBundleDisplayName': 'FlickOff Installer' + (' Build Check' if ci_check else ''),
+            'CFBundleName': 'FlickOff Installer',
+            'CFBundleDisplayName': 'FlickOff Installer',
             'CFBundleExecutable': 'FlickOffInstaller',
             'CFBundlePackageType': 'APPL',
             'CFBundleVersion': build,
