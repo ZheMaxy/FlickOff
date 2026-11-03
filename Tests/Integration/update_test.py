@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+"""Verify signed feed discovery, tamper rejection and Sparkle installation in temp copies."""
+from functools import partial
+import http.server
+from pathlib import Path
+import plistlib
+import subprocess
+import tempfile
+import threading
+import time
+import uuid
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def run(*args, timeout=60, check=True):
+    r = subprocess.run([str(a) for a in args], capture_output=True, text=True, timeout=timeout)
+    if check and r.returncode:
+        raise RuntimeError(r.stdout + r.stderr)
+    return r
+
+
+class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *_args):
+        pass
+
+
+def main():
+    app = ROOT / 'build/FlickOff.app'
+    framework = app / 'Contents/Frameworks'
+    signer = ROOT / '.build/artifacts/sparkle/Sparkle/bin/sign_update'
+    account = 'io.github.ZheMaxy.FlickOff'
+    with tempfile.TemporaryDirectory(prefix='flickoff-updater-') as temp:
+        temp = Path(temp)
+        probe = temp / 'update-probe'
+        run('xcrun', 'clang', '-fobjc-arc', '-framework', 'AppKit', '-F', framework,
+            '-framework', 'Sparkle', '-Wl,-rpath,' + str(framework),
+            ROOT / 'Tests/Integration/UpdateProbe.m', '-o', probe)
+        server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=str(temp)))
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        test_ids = []
+
+        def fixture(name):
+            case = temp / name
+            prefix = f'http://127.0.0.1:{server.server_port}/{name}/release'
+            test_id = account + '.UpdateTest.' + uuid.uuid4().hex
+            test_ids.append(test_id)
+            newer = case / 'new/FlickOff.app'
+            older = case / 'old/FlickOff.app'
+            run('ditto', app, newer)
+            info_path = newer / 'Contents/Info.plist'
+            info = plistlib.loads(info_path.read_bytes())
+            info['CFBundleIdentifier'] = test_id
+            info['SUFeedURL'] = prefix + '/appcast.xml'
+            info['NSAppTransportSecurity'] = {'NSAllowsLocalNetworking': True}
+            info_path.write_bytes(plistlib.dumps(info, sort_keys=False))
+            run('codesign', '--force', '--sign', '-', newer)
+            run('ditto', newer, older)
+            older_info = dict(info, CFBundleVersion='2', CFBundleShortVersionString='1.0.0')
+            (older / 'Contents/Info.plist').write_bytes(plistlib.dumps(older_info, sort_keys=False))
+            run('codesign', '--force', '--sign', '-', older)
+            run('python3', ROOT / 'scripts/make_release.py', '--app', newer, '--tag', 'test',
+                '--output', case / 'release', '--download-prefix', prefix, timeout=90)
+            return older, case / 'release'
+
+        try:
+            older, release = fixture('discovery')
+            r = run(probe, older, 'probe')
+            assert 'FOUND 3' in r.stdout, r.stdout + r.stderr
+            print('PASS: Sparkle discovers a newer build from a valid signed feed', flush=True)
+
+            older, release = fixture('feed')
+            feed = release / 'appcast.xml'
+            feed.write_bytes(feed.read_bytes().replace(b'FlickOff Updates', b'FakeOff Updates', 1))
+            r = run(probe, older, 'reject')
+            assert 'REJECTED_SIGNATURE' in r.stdout, r.stdout + r.stderr
+            print('PASS: Sparkle rejects a tampered feed', flush=True)
+
+            older, release = fixture('archive')
+            archive = release / 'FlickOff-1.1.0-arm64.zip'
+            damaged = bytearray(archive.read_bytes())
+            damaged[len(damaged)//2] ^= 1
+            archive.write_bytes(damaged)
+            r = run(probe, older, 'reject-archive')
+            assert 'REJECTED_SIGNATURE' in r.stdout, r.stdout + r.stderr
+            assert plistlib.loads((older / 'Contents/Info.plist').read_bytes())['CFBundleVersion'] == '2'
+            print('PASS: Sparkle rejects a tampered archive before installing it', flush=True)
+
+            older, release = fixture('install')
+            r = run(probe, older, 'install', check=False)
+            deadline = time.monotonic() + 20
+            while time.monotonic() < deadline:
+                installed = plistlib.loads((older / 'Contents/Info.plist').read_bytes())
+                if installed['CFBundleVersion'] == '3':
+                    break
+                time.sleep(0.2)
+            else:
+                raise AssertionError('Update did not install: ' + r.stdout + r.stderr)
+            run('codesign', '--verify', '--deep', '--strict', older)
+            assert run('lipo', '-archs', older / 'Contents/MacOS/FlickOff').stdout.strip() == 'arm64'
+            print('PASS: Sparkle downloads and installs the valid update into a temporary app', flush=True)
+        finally:
+            server.shutdown()
+            server.server_close()
+            for test_id in test_ids:
+                run('defaults', 'delete', test_id, check=False)
+
+
+
+if __name__ == '__main__':
+    main()

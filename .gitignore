@@ -1,0 +1,48 @@
+# --- secrets / credentials ---
+.env
+.env.*
+*.pem
+*.key
+*.p12
+id_rsa*
+id_ed25519*
+*token*.json
+*credentials*.json
+*secret*
+*_pass*.txt
+*password*
+.netrc
+
+# --- runtime data / outputs (keep code + docs only) ---
+data/
+out/
+output/
+logs/
+*.log
+*.bak
+*.bak-*
+*.raw.txt
+*_raw*.txt
+nodes.json
+*_indexed.json
+*.sqlite
+*.db
+*.pcap
+*.tar
+*.tar.gz
+*.zip
+
+# --- build / OS / editor ---
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+*.o
+.idea/
+.vscode/
+
+# --- build artifacts / app bundles ---
+.build/
+build/
+*.app/

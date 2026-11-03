@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+  <channel>
+    <title>FlickOff Updates</title>
+    <link>https://github.com/ZheMaxy/FlickOff</link>
+    <description>Signed FlickOff software updates</description>
+    <item>
+      <title>FlickOff 1.1.0</title>
+      <pubDate>Tue, 03 Nov 2026 21:00:10 +0000</pubDate>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0.0</sparkle:minimumSystemVersion>
+      <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+      <description>Keep your Mac. Lose the flicker. Manual brightness, Off mode and signed in-app updates.</description>
+      <enclosure url="https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.1/FlickOff-1.1.0-arm64.zip" sparkle:edSignature="XmEUwzLP4e7HihHz4HjK2G1Ns7w/gDxDp5hAMrCQxM63RCMXYuqSI+i5UZ6muF6Oq9vyQv39v6hyrF0GA7mNAA==" length="2257750" type="application/octet-stream"></enclosure>
+    </item>
+  </channel>
+</rss><!-- sparkle-signatures:
+edSignature: /zqdd4jD/oKlXoDQNy2gUNyn3Xsc9CGfyqgSgbO7giBqAGW7HvgXqjW4A7l7wH6zxGPieSW6Uh5RkCyrKyJnCQ==
+length: 1348
+-->

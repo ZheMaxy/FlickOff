@@ -1,0 +1,87 @@
+"mode.auto" = "Auto";
+"mode.manual" = "Manual";
+"mode.off" = "Off";
+"mode.label" = "Mode";
+
+/* Header: current light output of the Touch Bar */
+"status.nits" = "%ld nits";
+"status.off" = "off";
+
+"brightness" = "Brightness";
+/* Slider value: percent, nits */
+"brightness.value" = "%1$ld%% · %2$ld nits";
+
+"preventDimming" = "Don't dim when idle";
+"preventDimming.note" = "Keeping it lit speeds up OLED burn-in.";
+
+"launchAtLogin" = "Launch at login";
+"quit" = "Quit";
+
+/* Compatibility problems (launch-time self-test) */
+"error.unsupportedOS" = "This macOS version isn't supported yet.";
+"error.controlDenied" = "macOS didn't allow changing the Touch Bar brightness.";
+"error.noTouchBar" = "No Touch Bar found on this Mac.";
+"error.copyReport" = "Copy Report";
+"error.reportCopied" = "Copied";
+"problem.noTouchBar.why" = "FlickOff needs a 13-inch MacBook Pro with a Touch Bar and Apple silicon (2020 or 2022) running macOS 13 or later. Private API availability varies by macOS version.";
+"problem.unsupportedOS.update" = "Check whether a newer version of FlickOff is available.";
+"problem.controlDenied.restart" = "Restart your Mac and open the app again.";
+"problem.runDiagnostics" = "Click Run Diagnostics, review the report and, if the tests are available, run them before reporting the problem.";
+
+/* System Settings names, used only when they can't be read from this Mac */
+"settings.systemSettings" = "System Settings";
+"settings.general" = "General";
+"settings.loginItemsAndExtensions" = "Login Items & Extensions";
+"settings.openAtLogin" = "Open at Login";
+
+/* Setup guides */
+"setup.button.openSettings" = "Open Settings";
+/* %@ = localized name of the Applications folder */
+"setup.button.openFolder" = "Open “%@”";
+"setup.loginApproval.title" = "Allow the app to open at login";
+"setup.loginApproval.why" = "macOS is waiting for your approval, so the app won't start after a restart.";
+"setup.loginFailed.title" = "Couldn't turn on launch at login";
+"setup.loginFailed.why" = "macOS refused to add the app to the login items.";
+/* %@ = System Settings → General → Login Items… */
+"setup.step.openLoginItems" = "Open %@.";
+/* %1$@ = “Open at Login” section, %2$@ = Applications folder */
+"setup.step.enableApp" = "Under “%1$@”, find FlickOff and make sure it's on. If it isn't listed, click + and choose it in “%2$@”.";
+"setup.step.comeBack" = "Come back here: this message disappears on its own.";
+"setup.move.title" = "Move the app to “%@”";
+"setup.move.whyTranslocated" = "macOS is running a temporary copy from your downloads, so the app can't start at login.";
+"setup.move.whyElsewhere" = "Outside the Applications folder the app can't reliably start at login.";
+"setup.step.quit" = "Quit FlickOff.";
+"setup.step.drag" = "In Finder, drag FlickOff into “%@”.";
+"setup.step.openFromFolder" = "Open it from “%@”.";
+
+/* Diagnostics window */
+"setup.button.runDiagnostics" = "Run Diagnostics";
+"diagnostics.menu" = "Diagnostics…";
+"diagnostics.title" = "FlickOff Diagnostics";
+"diagnostics.intro" = "These checks help support your Mac. Each test briefly changes the Touch Bar, then reapplies the app settings. The brightness test includes a low level that may trigger flickering. Watch the Touch Bar while a test runs, then answer the question.";
+"diagnostics.tests" = "Tests";
+"diagnostics.collected" = "Collected information";
+"diagnostics.collecting" = "Collecting…";
+/* %ld = number of sections */
+"diagnostics.collectedSummary" = "%ld sections collected. Review the report before sharing.";
+"diagnostics.showDetails" = "Show report";
+"diagnostics.run" = "Run";
+"diagnostics.watch" = "Watch the Touch Bar…";
+"diagnostics.yes" = "Yes";
+"diagnostics.no" = "No";
+"diagnostics.notRun" = "Not run yet.";
+/* %@ = the API call that failed */
+"diagnostics.failed" = "macOS refused it (%@). Nothing to watch for.";
+"diagnostics.answeredYes" = "You saw the change.";
+"diagnostics.answeredNo" = "No visible change.";
+"diagnostics.save" = "Save Report…";
+"probe.panelOffOn.title" = "Turn the Touch Bar off and on";
+"probe.panelOffOn.question" = "Did the Touch Bar go dark for a moment and come back?";
+"probe.coreBrightnessLevel.title" = "Change brightness through the system";
+"probe.coreBrightnessLevel.question" = "Did the Touch Bar get dim and then bright?";
+"probe.dimmingCoefficient.title" = "Dim through the Touch Bar service";
+"probe.dimmingCoefficient.question" = "Did the Touch Bar get dimmer for a moment?";
+
+/* Software updates */
+"updates.check" = "Check for Updates…";
+"updates.automatic" = "Check for updates automatically";

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Validate staged additions against credential and attribution rules.
+added=$(git diff --cached --no-color -U0 --diff-filter=AM | grep -E '^\+[^+]' || true)
+# Match prohibited attribution in names and additions; split patterns avoid matching this file.
+banned='[c]laude|[c]odex|[c]hat[ -]?[g]pt|[g]pt-?[0-9]|кл''од|Кл''од|ч''атгпт|Ч''атГПТ'
+named=$( { git diff --cached --name-only --diff-filter=AMR; printf '%s\n' "$added"; } | grep -Ei "$banned" || true)
+if [ -n "$named" ]; then
+  echo "pre-commit: prohibited attribution in staged changes (lines cut to 60 chars):" >&2
+  printf '%s\n' "$named" | cut -c1-60 >&2
+  exit 1
+fi
+[ -z "$added" ] && exit 0
+V='[A-Za-z0-9/+_.!@#%^&*-]'
+# 1) well-known token / key formats (case-sensitive)
+p1='-----BEGIN [A-Z ]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{35}'
+# 2) UPPER_CASE env-style assignment of a literal value (case-sensitive)
+p2="(PASS(WORD|WD)?|SECRET|TOKEN|API_?KEY)[A-Z_]*[\"' ]*[:=][\"' ]*${V}{8,}"
+# 3) any-case keyword = quoted literal, or unquoted value that contains a digit
+p3a="(pass(word|wd)?|secret|token|api[_-]?key)[A-Za-z_]*[\"' ]*[:=] *[\"']${V}{8,}[\"']"
+p3b="(pass(word|wd)?|secret|token|api[_-]?key)[A-Za-z_]*[\"' ]*[:=] *${V}*[0-9]${V}{5,}"
+ok='(\$\{?[A-Za-z_]+|<[a-z_ -]+>|changeme|example|placeholder|op://|read -|getpass|os\.environ|os\.getenv|ProcessInfo)'
+hits=$( { printf '%s\n' "$added" | grep -En -e "$p1" -e "$p2"; printf '%s\n' "$added" | grep -Eni -e "$p3a" -e "$p3b"; } | grep -Evi "$ok" || true)
+if [ -n "$hits" ]; then
+  echo "pre-commit: possible secret in staged changes (lines cut to 60 chars):" >&2
+  printf '%s\n' "$hits" | cut -c1-60 >&2
+  echo "Use an environment variable or credential reference and retry." >&2
+  exit 1
+fi

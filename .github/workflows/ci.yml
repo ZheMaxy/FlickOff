@@ -1,0 +1,30 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    # Explicit Intel pool avoids the capacity-limited macOS arm64 queue.
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Native tests, bundle and read-only smoke checks
+        env:
+          TB_BUILD_ARCH: x86_64
+        run: ./build.sh
+      - name: Cross-compile the arm64 release target
+        run: swift build -c release --arch arm64 -debug-info-format none
+      - name: Check integration-test sources without hardware writes
+        run: |
+          python3 -m py_compile Tests/Integration/*.py scripts/*.py
+          xcrun clang -fsyntax-only -fobjc-arc -I Sources/TBPrivate/include Tests/Integration/PanelProbe.m
+          xcrun clang -fsyntax-only -fobjc-arc -F build/FlickOff.app/Contents/Frameworks Tests/Integration/UpdateProbe.m
