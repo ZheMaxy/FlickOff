@@ -30,6 +30,8 @@ jobs:
         run: shellcheck build.sh .githooks/commit-msg .githooks/pre-commit Packaging/Installer/preinstall Packaging/Installer/postinstall
       - name: Python
         run: pipx run ruff==0.17.3 check scripts Tests/Integration
+      - name: Repository hooks
+        run: python3 Tests/Integration/hooks_test.py
 
   links:
     runs-on: ubuntu-latest

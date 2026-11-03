@@ -82,7 +82,7 @@ def main():
         assert beta.findtext(f'{{{SPARKLE}}}channel') == 'beta'
         assert beta.findtext(f'{{{SPARKLE}}}phasedRolloutInterval') == '86400'
         assert plain.find('description').attrib[f'{{{SPARKLE}}}format'] == 'plain-text'
-        print('PASS: the feed names a channel or a phased rollout only when asked for')
+        print('PASS: channels and phased rollout reach the feed only when asked for')
 
         link = 'https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-1.1.0-arm64.dmg'
         text = publish.rewrite_links(f'[Download FlickOff-1.1.0-arm64.dmg]({link}) and [all](https://x/releases)', 'v1.2.0-beta.1', '1.2.0')
@@ -91,7 +91,7 @@ def main():
         cask = publish.rewrite_cask((ROOT / 'Casks/flickoff.rb').read_text(), 'v1.2.0-beta.1', '1.2.0', 'f' * 64)
         assert 'version "1.2.0"' in cask and f'sha256 "{"f" * 64}"' in cask
         assert 'releases/download/v1.2.0-beta.1/FlickOff-#{version}-arm64.zip' in cask
-        print('PASS: the feed step rewrites the download links and the cask')
+        print('PASS: publishing rewrites the download links and the cask')
 
         def verify(*arguments):
             command = ['swift', ROOT / 'scripts/verify_feed.swift', *arguments, ROOT / 'Resources/Info.plist']

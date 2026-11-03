@@ -10,6 +10,8 @@ if [ -n "$named" ]; then
   exit 1
 fi
 [ -z "$added" ] && exit 0
+# "PASS: " in front of a sentence is a test result, not a password. A lone value after it stays suspicious.
+checked=$(printf '%s\n' "$added" | sed -E "s/(^|[^A-Za-z0-9_])PASS: ([^ \"']+ +[^ ])/\1\2/")
 V='[A-Za-z0-9/+_.!@#%^&*-]'
 # 1) well-known token / key formats (case-sensitive)
 p1='-----BEGIN [A-Z ]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{35}'
@@ -19,7 +21,7 @@ p2="(PASS(WORD|WD)?|SECRET|TOKEN|API_?KEY)[A-Z_]*[\"' ]*[:=][\"' ]*${V}{8,}"
 p3a="(pass(word|wd)?|secret|token|api[_-]?key)[A-Za-z_]*[\"' ]*[:=] *[\"']${V}{8,}[\"']"
 p3b="(pass(word|wd)?|secret|token|api[_-]?key)[A-Za-z_]*[\"' ]*[:=] *${V}*[0-9]${V}{5,}"
 ok='(\$\{?[A-Za-z_]+|<[a-z_ -]+>|changeme|example|placeholder|op://|read -|getpass|os\.environ|os\.getenv|ProcessInfo)'
-hits=$( { printf '%s\n' "$added" | grep -En -e "$p1" -e "$p2"; printf '%s\n' "$added" | grep -Eni -e "$p3a" -e "$p3b"; } | grep -Evi "$ok" || true)
+hits=$( { printf '%s\n' "$checked" | grep -En -e "$p1" -e "$p2"; printf '%s\n' "$checked" | grep -Eni -e "$p3a" -e "$p3b"; } | grep -Evi "$ok" || true)
 if [ -n "$hits" ]; then
   echo "pre-commit: possible secret in staged changes (lines cut to 60 chars):" >&2
   printf '%s\n' "$hits" | cut -c1-60 >&2
