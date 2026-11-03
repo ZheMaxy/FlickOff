@@ -7,9 +7,10 @@ see the [compatibility table](../README.md) for current evidence.
 ## Install FlickOff
 
 1. [Download FlickOff-1.1.0-arm64.dmg](https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-1.1.0-arm64.dmg).
-2. Open the disk image and double-click **Install FlickOff**. Review the license
-   in that window and click **Agree and Install**. Confirm the macOS
-   administrator prompt.
+2. Open the disk image and double-click **Install FlickOff**. If macOS blocks
+   it, follow the [first-launch steps below](#first-launch-if-macos-blocks-the-app).
+   Then review the license in the installer window, click **Agree and Install**,
+   and confirm the macOS administrator prompt.
 3. When installation finishes, FlickOff opens automatically. Find its icon
    in the **menu bar**; it does not appear in the Dock.
 
@@ -19,6 +20,9 @@ installed copy. Your brightness settings and preferences are kept.
 
 If the icon is not visible, press **Command–Space**, type **FlickOff**, and press
 Return. The app itself does not need administrator access to control brightness.
+
+You do not need an Apple Developer account or subscription. The installer asks
+for your Mac's administrator authorization, not an Apple Developer login.
 
 ## First use and launch at login
 
@@ -42,15 +46,32 @@ You can also run a newer installer over the existing installation. It preserves
 preferences and handles closing and reopening the app. An older installer
 refuses to replace a newer build.
 
-## If macOS blocks the beta installer
+## First launch if macOS blocks the app
 
 This public beta is not notarized. The installer app and FlickOff use ad-hoc
-signatures rather than Developer ID signatures.
+signatures rather than Developer ID signatures. macOS may say that the developer
+cannot be verified or that Apple cannot check the app for malicious software.
 
-After checking that the disk image came from this project's GitHub Release, try
-opening **Install FlickOff**. If macOS blocks it, open **System Settings → Privacy & Security**
-and use **Open Anyway** when offered, then confirm the system prompt. A managed
-Mac may require your administrator's approval.
+If you trust the download from this project's GitHub Release:
+
+1. Try opening **Install FlickOff** once so macOS records the blocked launch.
+2. Open **System Settings → Privacy & Security**.
+3. Find the message about **Install FlickOff** in the Security section and choose
+   **Open Anyway**. On macOS versions that show **Security → Open**, open that
+   section first, then choose **Open Anyway**.
+4. Confirm **Open** and enter your Mac login password if macOS asks.
+5. Return to the installer and choose **Agree and Install**.
+
+If **FlickOff** itself is blocked after installation, try opening it from
+Applications or Spotlight and repeat the steps for **FlickOff**. Each app has
+its own exception. If Open Anyway is missing, try opening that app again and
+return to Privacy & Security; the option is available for a limited time after
+the attempt. A managed Mac may require your administrator's approval.
+
+These steps apply to an unverified developer or missing notarization warning.
+See [Apple's first-launch instructions](https://support.apple.com/en-gb/102445).
+The Ed25519 signatures used by FlickOff's updater authenticate update downloads;
+they are separate from Apple Developer ID signing and notarization.
 
 ## Build and install from source
 

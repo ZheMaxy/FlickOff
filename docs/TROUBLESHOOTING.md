@@ -5,6 +5,15 @@ change, or wakes after you turn its display off. For everyday controls, see
 [FlickOff's brightness and Off mode guide](../README.md); for first launch, see
 [installing FlickOff on macOS](INSTALL.md).
 
+## macOS cannot verify the developer or check the app
+
+The current beta is locally signed and has not been notarized by Apple. Try
+opening the app, then use **System Settings → Privacy & Security → Open Anyway**
+and confirm **Open**. Some macOS versions put this under **Security → Open**.
+Follow the [complete first-launch instructions](INSTALL.md#first-launch-if-macos-blocks-the-app)
+for **Install FlickOff**, and for **FlickOff** itself if it is also blocked.
+You do not need an Apple Developer subscription to install or use the app.
+
 ## Touch Bar still flickers at low brightness
 
 Choose Manual, raise brightness, and leave **Don't dim when idle** enabled if

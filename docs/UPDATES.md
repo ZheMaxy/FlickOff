@@ -68,3 +68,7 @@ not a hosted CI test. CI compiles the test companion without running it.
 
 Apple Developer ID signing/notarization is separate from Sparkle signing. The
 initial beta uses an ad-hoc app signature plus Sparkle Ed25519 update signatures.
+The first downloaded installer may therefore need a manual macOS exception;
+link the [first-launch instructions](INSTALL.md#first-launch-if-macos-blocks-the-app)
+beside the download in every release description. An updater signature does
+not establish Apple notarization or remove the first-launch requirement.

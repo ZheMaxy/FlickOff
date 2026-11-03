@@ -16,6 +16,11 @@ visibility changes and release publication are separate from local builds.
 5. Check that incompatible systems show a report without enabling hardware probes.
 6. Review installation/recovery instructions, README, license and
    commercial contact. Do not claim support for untested model/OS combinations.
+   For a locally signed release, put the Open Anyway steps directly beside the
+   download instructions in README and release notes, link the complete guide,
+   and attach a plain-text first-launch guide to the release. State that users
+   do not need an Apple Developer subscription. Update signing statements when
+   the actual signing or notarization status changes.
 7. Scan the tracked tree and history for credentials, personal diagnostics and
    build products. Hooks are an initial check, not a complete history audit.
 

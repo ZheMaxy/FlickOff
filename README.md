@@ -22,7 +22,8 @@ software workaround to try first.
 
 **FlickOff lets you keep the panel at a higher, fixed brightness,
 or keep its display off entirely — from the menu bar.** No terminal commands
-for everyday use, no administrator access, and no need to stop system services.
+for everyday use, no administrator access to adjust brightness, and no need to
+stop system services.
 
 This app started with the author's M1 MacBook Pro: its Touch Bar flickers at low
 brightness, while a higher fixed level helps. It cannot repair a failing panel,
@@ -37,16 +38,24 @@ what to do about hardware service.
 
 [Download the macOS installer (.dmg)](https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-1.1.0-arm64.dmg)
 or [browse all releases](https://github.com/ZheMaxy/FlickOff/releases).
-Open the disk image, open **Install FlickOff**, and choose **Agree and Install**.
-It installs FlickOff in
-Applications, upgrades an existing copy, and keeps your settings. FlickOff
-starts automatically and appears in the menu bar.
+Open the disk image and open **Install FlickOff**.
 
-This first public beta is tested on an M1 MacBook Pro with macOS 27.2. It is
-not notarized; the installer app and FlickOff are ad-hoc signed. If macOS
-blocks the download, follow the
-[Gatekeeper steps](docs/INSTALL.md). Noncommercial use is free; commercial use
-requires a [paid license](COMMERCIAL.md).
+**First launch:** this beta has not been notarized by Apple. If macOS says it
+cannot verify the developer or check the app for malicious software, open
+**System Settings → Privacy & Security**, find the blocked app, choose
+**Open Anyway**, then confirm **Open**. If your macOS version shows **Security →
+Open** first, open that section to find the exception. See the
+[complete first-launch steps](docs/INSTALL.md#first-launch-if-macos-blocks-the-app).
+
+Once the installer opens, review the license and choose **Agree and Install**.
+Confirm the macOS administrator prompt. It installs FlickOff in Applications,
+upgrades an existing copy, keeps your settings and opens the app in the menu bar.
+If macOS also blocks **FlickOff** itself, repeat the first-launch steps for it.
+
+This public beta is tested on an M1 MacBook Pro with macOS 27.2. The installer
+app and FlickOff use local ad-hoc signatures rather than Developer ID signatures.
+**You do not need an Apple Developer account or subscription to install it.**
+Noncommercial use is free; commercial use requires a [paid license](COMMERCIAL.md).
 
 ## Adjust brightness or turn off the Touch Bar display
 
