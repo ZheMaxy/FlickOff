@@ -6,7 +6,7 @@ see the [compatibility table](../README.md) for current evidence.
 
 ## Install FlickOff
 
-1. [Download FlickOff-1.1.0-arm64.dmg](https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-1.1.0-arm64.dmg).
+1. [Download FlickOff-1.2.0-arm64.dmg](https://github.com/ZheMaxy/FlickOff/releases/download/v1.2.0-beta.1/FlickOff-1.2.0-arm64.dmg).
 2. Open the disk image and double-click **Install FlickOff**. If macOS blocks
    it, follow the [first-launch steps below](#first-launch-if-macos-blocks-the-app).
    Then review the license in the installer window, click **Agree and Install**,

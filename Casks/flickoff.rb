@@ -1,8 +1,8 @@
 cask "flickoff" do
-  version "1.1.0"
-  sha256 "6e67471f7b9b3ff4470d6b3790969c4cb9464eacce18e4db0d7fb74a223ccc8d"
+  version "1.2.0"
+  sha256 "f7a85f83eee74b122ab4758d2310463fa55a960613be3421d9934595b4079e5a"
 
-  url "https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-#{version}-arm64.zip"
+  url "https://github.com/ZheMaxy/FlickOff/releases/download/v1.2.0-beta.1/FlickOff-#{version}-arm64.zip"
   name "FlickOff"
   desc "Touch Bar brightness control and display off for Apple silicon MacBook Pro"
   homepage "https://github.com/ZheMaxy/FlickOff"

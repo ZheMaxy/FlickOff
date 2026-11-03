@@ -6,17 +6,23 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <link>https://github.com/ZheMaxy/FlickOff</link>
     <description>Signed FlickOff software updates</description>
     <item>
-      <title>FlickOff 1.1.0 (build 4)</title>
-      <pubDate>Tue, 03 Nov 2026 21:51:06 +0000</pubDate>
-      <sparkle:version>4</sparkle:version>
-      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <title>FlickOff 1.2.0 (build 5)</title>
+      <pubDate>Tue, 03 Nov 2026 23:51:44 +0000</pubDate>
+      <sparkle:version>5</sparkle:version>
+      <sparkle:shortVersionString>1.2.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0.0</sparkle:minimumSystemVersion>
       <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-      <description>Keep your Mac. Lose the flicker. Manual brightness, Off mode and signed in-app updates.</description>
-      <enclosure url="https://github.com/ZheMaxy/FlickOff/releases/download/v1.1.0-beta.2/FlickOff-1.1.0-arm64.zip" sparkle:edSignature="pTtCQmn8Ef3igBWvt3CVlHBCYVaDod1bekGO7WZB4V/qqGOMUx4HvBWqVLaF3hPwFmqpL9hAREY/3ly9U44IBw==" length="2257752" type="application/octet-stream"></enclosure>
+      <description sparkle:format="plain-text">What's new in 1.2.0
+
+- "When idle" replaces the "Don't dim when idle" checkbox. FlickOff can now turn the Touch Bar off after 1, 5 or 15 minutes without input, which skips the dim range that can flicker and spares the OLED. If you're updating, nothing changes until you choose.
+- Far less energy while idle: about 0.1% CPU instead of about 2.2%.
+- More reliable right after login, during fast user switching, and when macOS refuses a change.
+- Updates found in the background now show on the menu bar icon and in the menu.
+- Opening FlickOff while it runs shows its controls in a window, which helps if the menu bar icon is hidden.</description>
+      <enclosure url="https://github.com/ZheMaxy/FlickOff/releases/download/v1.2.0-beta.1/FlickOff-1.2.0-arm64.zip" sparkle:edSignature="66Y9J2mH9UHegHetmea7phbqXTvA55gjN6zuqtPghsWskzux7x2p0+Yx3A2divqfQolzY+OfR2kf0zrWLlXOCw==" length="2212414" type="application/octet-stream"></enclosure>
     </item>
   </channel>
 </rss><!-- sparkle-signatures:
-edSignature: lvPBWcIT6U7+qHCiYe0p+BCvBqySLlq31Q8gsmV2gZzxoJurmN6ABI0YqAZ9BA9CjCvg+mG360HUwMq2PbTTBg==
-length: 1358
+edSignature: W4CzMx+TPF0tQR2Zx3Doks/eoE9xy8XgYFJ0UBPhZj+ipszct7pBXKDmBGevgdztKrORI139+TAv8cDXhf78BQ==
+length: 1930
 -->
