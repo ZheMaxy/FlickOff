@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import Testing
 @testable import TouchBarKit
 
@@ -428,5 +429,100 @@ struct LoginItemRetryTests {
         h.makeController().setLaunchAtLogin(false)
         h.makeController().configureLoginItemOnFirstLaunch()
         #expect(h.loginItem.registerCount == 0)
+    }
+}
+
+@Suite("Energy use")
+@MainActor
+struct EnergyTests {
+    /// Every notification redraws the menu bar icon, so a Mac where nothing changes must see none.
+    @Test func idlePollingNotifiesNobody() {
+        let h = Harness()
+        let c = h.makeController()
+        c.start()
+        var notifications = 0
+        let subscription = c.objectWillChange.sink { _ in notifications += 1 }
+        for _ in 0..<40 { c.tick() }
+        #expect(notifications == 0)
+        subscription.cancel()
+        c.prepareForQuit()
+    }
+
+    @Test func aChangingReadingDoesNotNotifyTheController() {
+        let h = Harness()
+        let c = h.makeController()
+        c.setMenuOpen(true)
+        var notifications = 0
+        var readings = 0
+        let controller = c.objectWillChange.sink { _ in notifications += 1 }
+        let telemetry = c.telemetry.objectWillChange.sink { _ in readings += 1 }
+        h.touchBar.physicalNits = 123
+        c.tick()
+        c.tick()
+        #expect(c.physicalNits == 123)
+        #expect(readings == 1)
+        #expect(notifications == 0)
+        controller.cancel()
+        telemetry.cancel()
+    }
+
+    @Test func theLightOutputIsOnlyReadWhileTheMenuIsOpen() {
+        let h = Harness()
+        let c = h.makeController()
+        h.touchBar.physicalNits = 123
+        c.tick()
+        c.tick()
+        #expect(c.physicalNits == 0)
+
+        c.setMenuOpen(true)
+        #expect(c.physicalNits == 123, "fresh as soon as the menu opens")
+
+        c.setMenuOpen(false)
+        h.touchBar.physicalNits = 200
+        c.tick()
+        c.tick()
+        #expect(c.physicalNits == 123)
+    }
+
+    @Test func loginStatusIsNotPolledOnceSettled() {
+        let h = Harness()
+        h.loginItem.status = .enabled
+        let c = h.makeController()
+        c.refreshLoginStatus()
+        let reads = h.loginItem.statusReads
+        for _ in 0..<100 { c.tick() }
+        #expect(h.loginItem.statusReads == reads)
+    }
+
+    @Test func openingTheMenuPicksUpAChangeMadeInSystemSettings() {
+        let h = Harness()
+        h.loginItem.status = .enabled
+        let c = h.makeController()
+        c.refreshLoginStatus()
+        h.loginItem.status = .disabled
+        c.setMenuOpen(true)
+        #expect(!c.launchAtLogin)
+    }
+
+    @Test func pollingStopsDuringSleep() {
+        let h = Harness()
+        let c = h.makeController()
+        c.start()
+        #expect(c.isPolling)
+        c.systemWillSleep()
+        #expect(!c.isPolling)
+        c.systemDidWake()
+        #expect(c.isPolling)
+        c.prepareForQuit()
+        #expect(!c.isPolling)
+    }
+
+    @Test func aSliderDragOnlyWritesRealChanges() {
+        let h = Harness(settings: ["level": 0.5])
+        let c = h.makeController()
+        c.level = 0.6
+        h.touchBar.resetCalls()
+        c.level = 0.6
+        #expect(h.touchBar.calls.isEmpty)
     }
 }

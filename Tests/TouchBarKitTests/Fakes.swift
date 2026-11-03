@@ -82,7 +82,12 @@ final class FakeSystemState: SystemStateProviding {
 final class FakeLoginItem: LoginItemControlling {
     struct Failure: Error {}
 
-    var status: LoginItemStatus = .disabled
+    private(set) var statusReads = 0
+    private var currentStatus = LoginItemStatus.disabled
+    var status: LoginItemStatus {
+        get { statusReads += 1; return currentStatus }
+        set { currentStatus = newValue }
+    }
     var failNextCall = false
     private(set) var registerCount = 0
     private(set) var unregisterCount = 0

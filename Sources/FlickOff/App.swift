@@ -44,6 +44,9 @@ struct SettingsLabels {
     let openAtLogin: String
     let applications: String
 
+    /// Reading them walks system bundles, and the app's language can't change while it runs.
+    static let shared = current()
+
     static func current(names: SystemSettingsNames = .read()) -> SettingsLabels {
         SettingsLabels(
             systemSettings: names.systemSettings ?? L("settings.systemSettings"),
@@ -160,10 +163,7 @@ struct MenuView: View {
                 Text("FlickOff").font(.headline)
                 Spacer()
                 if c.touchBar != nil {
-                    Text(c.physicalNits > 0 ? String(format: L("status.nits"), Int(c.physicalNits.rounded())) : L("status.off"))
-                        .font(.caption)
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
+                    LightOutputLabel(telemetry: c.telemetry)
                 }
             }
 
@@ -200,7 +200,7 @@ struct MenuView: View {
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
-                    Slider(value: $c.level, in: 0...1)
+                    Slider(value: percentLevel, in: 0...1)
                 }
                 .disabled(c.mode != .manual)
                 .opacity(c.mode == .manual ? 1 : 0.4)
@@ -236,10 +236,37 @@ struct MenuView: View {
         }
         .padding(14)
         .frame(width: 320)
-        .onAppear { c.refreshLoginStatus() }
+        // The window of a menu bar item outlives closing the menu, so onAppear alone fires only once.
+        .onAppear { c.setMenuOpen(true) }
+        .onDisappear { c.setMenuOpen(false) }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in c.setMenuOpen(true) }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in c.setMenuOpen(false) }
     }
 
-    private var labels: SettingsLabels { SettingsLabels.current() }
+    private var labels: SettingsLabels { .shared }
+
+    /// One percent is the finest step the menu shows; anything finer only adds corebrightnessd writes.
+    private var percentLevel: Binding<Double> {
+        Binding(
+            get: { c.level },
+            set: { value in
+                let rounded = (value * 100).rounded() / 100
+                if rounded != c.level { c.level = rounded }
+            }
+        )
+    }
+}
+
+/// Redraws on its own, so a changing reading doesn't touch the rest of the menu.
+struct LightOutputLabel: View {
+    @ObservedObject var telemetry: PanelTelemetry
+
+    var body: some View {
+        Text(telemetry.physicalNits > 0 ? String(format: L("status.nits"), Int(telemetry.physicalNits.rounded())) : L("status.off"))
+            .font(.caption)
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+    }
 }
 
 /// Plain ObservableObject: the @State macro needs Xcode's macro plugins, which the Command Line Tools lack.

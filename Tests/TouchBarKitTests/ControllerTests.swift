@@ -346,6 +346,7 @@ struct ReviewRegressionTests {
         let h = Harness()
         h.touchBar.physicalNits = value
         let c = h.makeController()
+        c.setMenuOpen(true)
         c.tick()
         c.tick()
         #expect(c.physicalNits == 0)

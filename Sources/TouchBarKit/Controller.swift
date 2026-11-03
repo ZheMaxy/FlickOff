@@ -8,6 +8,13 @@ public enum Mode: String, CaseIterable, Identifiable, Sendable {
     public var id: String { rawValue }
 }
 
+/// Light output shown in the menu header. Separate from Controller so a changing reading redraws
+/// only that label; a change on Controller itself also redraws the menu bar icon.
+@MainActor
+public final class PanelTelemetry: ObservableObject {
+    @Published public fileprivate(set) var physicalNits: Float = 0
+}
+
 /// Keeps the Touch Bar in the user's chosen state. corebrightnessd forgets manual settings on reboot
 /// and TouchBarServer dims/turns the panel off on idle, so the state is re-applied continuously.
 @MainActor
@@ -18,6 +25,7 @@ public final class Controller: ObservableObject {
     /// nil while the compatibility check fails: the app then only shows the problem.
     public private(set) var touchBar: TouchBarControlling?
     @Published public private(set) var compatibility: CompatibilityReport
+    public let telemetry = PanelTelemetry()
     private let system: SystemStateProviding
     private let loginItem: LoginItemControlling
     private let defaults: UserDefaults
@@ -44,7 +52,7 @@ public final class Controller: ObservableObject {
             guard level != oldValue else { return }
             defaults.set(level, forKey: Keys.level)
             if mode == .manual, canControl, !awaitingOriginal, let tb = touchBar {
-                controlFailed = !tb.setBrightness(Float(level))
+                publish(\.controlFailed, !tb.setBrightness(Float(level)))
             }
         }
     }
@@ -63,9 +71,11 @@ public final class Controller: ObservableObject {
     @Published public private(set) var controlFailed = false
     /// macOS kept refusing to turn the panel on or off or to undo its dimming.
     @Published public private(set) var panelControlFailed = false
-    @Published public private(set) var physicalNits: Float = 0
     @Published public private(set) var setupIssues: [SetupIssue] = []
     private var loginItemFailed = false
+    private var menuIsOpen = false
+
+    public var physicalNits: Float { telemetry.physicalNits }
 
     /// Set while diagnostics probes run, so the controller doesn't undo what they test.
     public var enforcementPaused = false
@@ -168,10 +178,26 @@ public final class Controller: ObservableObject {
         awaitingOriginal = true
         touchBar.onPanelStateChange { [weak self] in self?.enforcePanelState() }
         applySettings()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        startTimer()
+    }
+
+    private func startTimer() {
+        guard started, timer == nil, touchBar != nil else { return }
+        let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
+        // Lets macOS coalesce the wakeups. The common modes keep it running during slider drags and modal panels.
+        timer.tolerance = 0.1
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
     }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    var isPolling: Bool { timer != nil }
 
     /// One attempt to reach services that failed the compatibility check. true once the Touch Bar is under control.
     @discardableResult
@@ -186,7 +212,7 @@ public final class Controller: ObservableObject {
             beginControl()
             return true
         }
-        if connection.report != compatibility { compatibility = connection.report }
+        publish(\.compatibility, connection.report)
         return false
     }
 
@@ -209,8 +235,7 @@ public final class Controller: ObservableObject {
     var reconnectIsScheduled: Bool { reconnectTimer != nil }
 
     public func prepareForQuit() {
-        timer?.invalidate()
-        timer = nil
+        stopTimer()
         reconnectTimer?.invalidate()
         reconnectTimer = nil
         for (center, token) in observers { center.removeObserver(token) }
@@ -282,7 +307,7 @@ public final class Controller: ObservableObject {
         case .off:
             break
         }
-        controlFailed = !accepted
+        publish(\.controlFailed, !accepted)
         enforcePanelState()
     }
 
@@ -290,22 +315,38 @@ public final class Controller: ObservableObject {
         guard canControl else { return }
         enforcePanelState()
         ticks += 1
-        if ticks % 2 == 0 {
-            let value = touchBar?.physicalNits ?? 0
-            physicalNits = value.isFinite ? min(10_000, max(0, value)) : 0
-        }
+        if menuIsOpen, ticks % 2 == 0 { refreshTelemetry() }
         if ticks % 10 == 0 {
             applySettings()
-            refreshLoginStatus() // picks up approval given in System Settings
+            // Asking macOS is an XPC round trip, so only while waiting for approval in System Settings.
+            if setupIssues.contains(.loginItemNeedsApproval) || setupIssues.contains(.loginItemFailed) {
+                refreshLoginStatus()
+            }
         }
+    }
+
+    /// The menu or another of the app's windows opened or closed; nobody reads the light output otherwise.
+    public func setMenuOpen(_ open: Bool) {
+        menuIsOpen = open
+        guard open else { return }
+        refreshTelemetry()
+        refreshLoginStatus()
+    }
+
+    private func refreshTelemetry() {
+        let value = touchBar?.physicalNits ?? 0
+        let valid = value.isFinite ? min(10_000, max(0, value)) : 0
+        if valid.rounded() != telemetry.physicalNits.rounded() { telemetry.physicalNits = valid }
     }
 
     func systemWillSleep() {
         systemAsleep = true
+        stopTimer()
     }
 
     func systemDidWake() {
         systemAsleep = false
+        startTimer()
         userReturned()
     }
 
@@ -353,15 +394,20 @@ public final class Controller: ObservableObject {
     /// Paused for a probe, or another user owns the console: leave the panel alone.
     private var canControl: Bool { !enforcementPaused && sessionActive }
 
+    /// @Published notifies even when the value is unchanged, and every notification redraws the
+    /// menu bar icon. Polling sets these values constantly, so only real changes may get through.
+    private func publish<Value: Equatable>(_ property: ReferenceWritableKeyPath<Controller, Value>, _ value: Value) {
+        if self[keyPath: property] != value { self[keyPath: property] = value }
+    }
+
     private func notePanelWrite(_ accepted: Bool) {
         panelRefusals = accepted ? 0 : panelRefusals + 1
-        let failed = panelRefusals >= Self.refusalsBeforeWarning
-        if panelControlFailed != failed { panelControlFailed = failed }
+        publish(\.panelControlFailed, panelRefusals >= Self.refusalsBeforeWarning)
     }
 
     private func resetPanelRefusals() {
         panelRefusals = 0
-        if panelControlFailed { panelControlFailed = false }
+        publish(\.panelControlFailed, false)
     }
 
     private func observeSystemEvents() {
@@ -407,9 +453,8 @@ public final class Controller: ObservableObject {
 
     public func refreshLoginStatus() {
         let status = loginItem.status
-        launchAtLogin = status == .enabled || status == .requiresApproval
-        loginNeedsApproval = status == .requiresApproval
-        let issues = SetupInspector.issues(bundlePath: bundlePath, loginItem: status, loginItemFailed: loginItemFailed)
-        if issues != setupIssues { setupIssues = issues }
+        publish(\.launchAtLogin, status == .enabled || status == .requiresApproval)
+        publish(\.loginNeedsApproval, status == .requiresApproval)
+        publish(\.setupIssues, SetupInspector.issues(bundlePath: bundlePath, loginItem: status, loginItemFailed: loginItemFailed))
     }
 }
