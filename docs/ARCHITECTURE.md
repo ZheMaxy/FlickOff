@@ -115,6 +115,12 @@ from breaking, and the home page's version in step with the feed. Structured dat
 carries no ratings, because the project has no real ones to report.
 `scripts/make_social_preview.swift` draws the image shown when a link is shared.
 
+GitHub's own search reads only the name, description and topics. Measured in November
+2026: a shorter description ranks clearly higher (12th of 12 at 213 characters, 7th at
+59, 4th at 24 for "touch bar flickering"), the number of topics makes no difference, and
+only single-word topics count as search words, so `disable` helps where
+`disable-touch-bar` doesn't. Keep the description short and move other words to topics.
+
 ## Installation
 
 `scripts/make_installer.py` creates a disk image containing Install FlickOff.app.
