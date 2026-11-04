@@ -8,8 +8,8 @@ checked at runtime.
 
 - Source and documentation only: no credentials, personal reports or build
   artifacts. Distribute binaries through Releases.
-- Update README and relevant documentation when changing behaviour or support,
-  and note user-visible changes in CHANGELOG.md.
+- Update README, the website in `site/` and relevant documentation when changing
+  behaviour or support, and note user-visible changes in CHANGELOG.md.
 - Commit verified changes with a message explaining their purpose. Push only
   when the owner requests or authorizes it for the task.
 - Enable the repository hooks with `git config core.hooksPath .githooks`.

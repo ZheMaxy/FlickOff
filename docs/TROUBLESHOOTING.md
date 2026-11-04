@@ -1,9 +1,11 @@
 # Touch Bar flickering, brightness and Off mode troubleshooting
 
-Use this guide if your MacBook Pro Touch Bar keeps flashing, ignores a brightness
-change, or wakes after you turn its display off. For everyday controls, see
-[FlickOff's brightness and Off mode guide](../README.md); for first launch, see
-[installing FlickOff on macOS](INSTALL.md).
+Use this guide if FlickOff is installed and your MacBook Pro Touch Bar keeps
+flickering or flashing, ignores a brightness change, or wakes after you turn its
+display off. If you haven't tried anything yet, start with
+[what to try when a Touch Bar flickers](https://zhemaxy.github.io/FlickOff/touch-bar-flickering/).
+For everyday controls, see [FlickOff's brightness and Off mode guide](../README.md);
+for first launch, see [installing FlickOff on macOS](INSTALL.md).
 
 ## macOS cannot verify the developer or check the app
 

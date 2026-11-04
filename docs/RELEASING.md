@@ -58,7 +58,7 @@ signing key reaches CI. See [update publishing](UPDATES.md) for the key itself.
 
    ```sh
    python3 scripts/publish.py upload --run <run ID> --tag v1.2.0-beta.1 \
-       --title "FlickOff 1.2.0 — Public Beta 1" \
+       --title "FlickOff 1.2.0 Beta 1: Touch Bar flickering fix and brightness control" \
        --notes notes.txt --body release.md --output build/release-1.2.0-beta.1
    ```
 
@@ -87,8 +87,8 @@ signing key reaches CI. See [update publishing](UPDATES.md) for the key itself.
    python3 scripts/publish.py feed --output build/release-1.2.0-beta.1
    ```
 
-   This commits the feed unchanged, with the updated download links and Homebrew cask,
-   pushes `main` and waits until the feed URL serves it. The **Update feed** workflow
+   This commits the feed unchanged, with the updated download links, website and
+   Homebrew cask, pushes `main` and waits until the feed URL serves it. The **Update feed** workflow
    then checks it again with only the public key, and repeats that daily.
 
 Do not add loose files alongside the app inside the updater ZIP. It preserves
