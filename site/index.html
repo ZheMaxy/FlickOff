@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlickOff: Touch Bar flickering fix for MacBook Pro</title>
+<meta name="description" content="Touch Bar flickering at low brightness? FlickOff holds it at a fixed brightness or turns its display off, from the menu bar. For Apple silicon MacBook Pro.">
+<link rel="canonical" href="https://zhemaxy.github.io/FlickOff/">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="FlickOff">
+<meta property="og:title" content="FlickOff: Touch Bar flickering fix for MacBook Pro">
+<meta property="og:description" content="Hold the Touch Bar at a fixed brightness, separately from the screen, or turn its display off. A menu bar app for Apple silicon MacBook Pro.">
+<meta property="og:url" content="https://zhemaxy.github.io/FlickOff/">
+<meta property="og:image" content="https://zhemaxy.github.io/FlickOff/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="FlickOff: Touch Bar brightness control and display off for Apple silicon MacBook Pro">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "FlickOff",
+      "description": "A macOS menu bar app that sets Touch Bar brightness separately from the screen, or turns the Touch Bar display off, as a workaround for Touch Bar flickering on Apple silicon MacBook Pro.",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "macOS 13 or later",
+      "softwareVersion": "1.2.0",
+      "url": "https://zhemaxy.github.io/FlickOff/",
+      "downloadUrl": "https://github.com/ZheMaxy/FlickOff/releases/download/v1.2.0-beta.1/FlickOff-1.2.0-arm64.dmg",
+      "screenshot": "https://zhemaxy.github.io/FlickOff/menu.png",
+      "image": "https://zhemaxy.github.io/FlickOff/icon.png",
+      "license": "https://polyformproject.org/licenses/noncommercial/1.0.0",
+      "author": {"@type": "Person", "name": "ZheMaxy", "url": "https://github.com/ZheMaxy"},
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free for noncommercial use"}
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can FlickOff stop my Touch Bar from flickering?",
+          "acceptedAnswer": {"@type": "Answer", "text": "It can if your Touch Bar only flickers at low brightness, which is how it started on the author's M1 MacBook Pro: FlickOff keeps it at a higher, fixed level, and can turn it off when idle instead of letting it dim. It can't repair a failing panel and won't solve every kind of flicker."}
+        },
+        {
+          "@type": "Question",
+          "name": "Does FlickOff work on Intel MacBook Pro models?",
+          "acceptedAnswer": {"@type": "Answer", "text": "No. FlickOff is for Apple silicon only. It has been tested on the 13-inch M1 MacBook Pro (2020) with macOS 27.2. The 13-inch M2 model may work too, but hasn't been verified."}
+        },
+        {
+          "@type": "Question",
+          "name": "Does turning off the Touch Bar disable Touch ID?",
+          "acceptedAnswer": {"@type": "Answer", "text": "No. FlickOff's Off mode keeps the display dark while the app runs. Touch ID keeps working, and so does touch input, so the invisible keys still respond."}
+        },
+        {
+          "@type": "Question",
+          "name": "Is FlickOff free?",
+          "acceptedAnswer": {"@type": "Answer", "text": "Noncommercial use is free under PolyForm Noncommercial 1.0.0. Business and other commercial use need a separate paid license."}
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="favicon.png" width="28" height="28" alt="">FlickOff</a>
+    <nav>
+      <a href="touch-bar-flickering/">Flickering guide</a>
+      <a href="turn-off-touch-bar/">Turn it off</a>
+      <a href="https://github.com/ZheMaxy/FlickOff">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Touch Bar flickering? Hold it steady, or turn it off.</h1>
+      <p class="lead">FlickOff is a menu bar app for Apple silicon MacBook Pro. It gives the Touch Bar the brightness control macOS doesn't have, so it can stay out of the dim range where it flickers, flashes or blinks.</p>
+      <div class="actions">
+        <a class="button" href="https://github.com/ZheMaxy/FlickOff/releases/download/v1.2.0-beta.1/FlickOff-1.2.0-arm64.dmg">Download for Mac</a>
+        <a href="#install">Or install with Homebrew</a>
+      </div>
+      <p class="small">Public beta · Apple silicon · macOS 13 or later · Free for noncommercial use</p>
+    </div>
+    <img src="menu.png" width="320" height="363" alt="The FlickOff menu: Auto, Manual and Off modes, a brightness slider at 80 percent, and When idle set to Turn off after 5 min">
+  </section>
+
+  <h2>What it does</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>Set the brightness yourself</h3>
+      <p>Choose a level for the Touch Bar, separately from the screen. It stays there instead of following the light in the room.</p>
+    </div>
+    <div class="card">
+      <h3>Skip the dim range</h3>
+      <p>Instead of dimming when you stop using the Mac, it can turn off after 1, 5 or 15 minutes, and light again when you come back.</p>
+    </div>
+    <div class="card">
+      <h3>Or keep it dark</h3>
+      <p>Off keeps the display dark while the app runs. Touch ID and touch input keep working.</p>
+    </div>
+  </div>
+
+  <h2>Why a Touch Bar needs this</h2>
+  <p>You're working in a dim room. The Touch Bar gets darker, and starts flashing. macOS gives you no separate brightness slider for it, and the brightness controls <em>on</em> the Touch Bar adjust the main screen, not the strip that's flickering.</p>
+  <p>FlickOff started with the author's M1 MacBook Pro, whose Touch Bar flickers at low brightness while a higher fixed level helps. If you want to work out what's going on with yours first, see <a href="touch-bar-flickering/">what to try when a Touch Bar flickers</a>.</p>
+  <p class="note"><strong>This is a workaround, not a repair.</strong> It can't fix a failing panel and won't solve every kind of flicker. It uses private Apple frameworks, so a macOS update can break it; if that happens it shows a report and leaves the panel alone.</p>
+
+  <h2>Does it work on my Mac?</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Mac</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>13-inch MacBook Pro, M1, 2020</td><td>Tested on macOS 27.2</td></tr>
+        <tr><td>13-inch MacBook Pro, M2, 2022</td><td>May work, not verified</td></tr>
+        <tr><td>Intel MacBook Pro with Touch Bar, 2016 to 2020</td><td>Not supported</td></tr>
+        <tr><td>Earlier macOS, back to macOS 13</td><td>Allowed, not tested on hardware</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="install">Install</h2>
+  <h3>With the installer</h3>
+  <ol>
+    <li><a href="https://github.com/ZheMaxy/FlickOff/releases/download/v1.2.0-beta.1/FlickOff-1.2.0-arm64.dmg">Download the disk image</a>, open it, and open <strong>Install FlickOff</strong>.</li>
+    <li>This beta isn't notarized by Apple. If macOS blocks it, open <strong>System Settings → Privacy &amp; Security</strong>, choose <strong>Open Anyway</strong> and confirm <strong>Open</strong>. You don't need an Apple Developer account. <a href="https://github.com/ZheMaxy/FlickOff/blob/main/docs/INSTALL.md#first-launch-if-macos-blocks-the-app">Full first-launch steps</a>.</li>
+    <li>Choose <strong>Agree and Install</strong> and confirm the administrator prompt. FlickOff appears in the menu bar.</li>
+  </ol>
+  <h3>With Homebrew</h3>
+  <p>No first-launch steps and no administrator password. <a href="https://github.com/ZheMaxy/FlickOff/blob/main/docs/INSTALL.md#install-with-homebrew">What this means</a>.</p>
+  <pre><code>brew tap zhemaxy/flickoff https://github.com/ZheMaxy/FlickOff
+brew install --cask zhemaxy/flickoff/flickoff</code></pre>
+
+  <h2>Questions</h2>
+  <h3>Can FlickOff stop my Touch Bar from flickering?</h3>
+  <p>It can if your Touch Bar only flickers at low brightness, which is how it started on the author's M1 MacBook Pro: FlickOff keeps it at a higher, fixed level, and can turn it off when idle instead of letting it dim. It can't repair a failing panel and won't solve every kind of flicker.</p>
+  <h3>Does FlickOff work on Intel MacBook Pro models?</h3>
+  <p>No. FlickOff is for Apple silicon only. It has been tested on the 13-inch M1 MacBook Pro (2020) with macOS 27.2. The 13-inch M2 model may work too, but hasn't been verified.</p>
+  <h3>Does turning off the Touch Bar disable Touch ID?</h3>
+  <p>No. FlickOff's Off mode keeps the display dark while the app runs. Touch ID keeps working, and so does touch input, so the invisible keys still respond.</p>
+  <h3>Is FlickOff free?</h3>
+  <p>Noncommercial use is free under PolyForm Noncommercial 1.0.0. Business and other commercial use need a separate paid license.</p>
+</main>
+<footer>
+  <div class="wrap">
+    <p><a href="https://github.com/ZheMaxy/FlickOff">Source on GitHub</a> · <a href="https://github.com/ZheMaxy/FlickOff/blob/main/docs/TROUBLESHOOTING.md">Troubleshooting</a> · <a href="https://github.com/ZheMaxy/FlickOff/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/ZheMaxy/FlickOff/blob/main/SECURITY.md">Security</a> · <a href="https://github.com/ZheMaxy/FlickOff/blob/main/COMMERCIAL.md">Commercial license</a></p>
+    <p>Free for noncommercial use under PolyForm Noncommercial 1.0.0. Not affiliated with Apple. Touch Bar and MacBook Pro are trademarks of Apple Inc.</p>
+  </div>
+</footer>
+</body>
+</html>

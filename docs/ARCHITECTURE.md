@@ -104,6 +104,17 @@ Homebrew installs the same ZIP through `Casks/flickoff.rb`, which this repositor
 serves as its own tap. The cask removes the quarantine flag, since the app isn't
 notarized; that app stays owned by the user, so Sparkle needs no administrator.
 
+## Website
+
+`site/` holds plain HTML with no build step and no scripts: a landing page and guides
+for what people search for when a Touch Bar flickers. The Website workflow deploys it
+to GitHub Pages and tells search engines that take IndexNow. It has no `robots.txt`,
+which a project site can't serve from the host's root. `Tests/Integration/site_test.py`
+keeps titles, descriptions, canonical addresses, structured data and internal links
+from breaking, and the home page's version in step with the feed. Structured data
+carries no ratings, because the project has no real ones to report.
+`scripts/make_social_preview.swift` draws the image shown when a link is shared.
+
 ## Installation
 
 `scripts/make_installer.py` creates a disk image containing Install FlickOff.app.

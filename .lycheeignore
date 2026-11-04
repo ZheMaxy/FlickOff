@@ -1,3 +1,5 @@
 # These only answer to a signed-in browser.
 https://github.com/ZheMaxy/FlickOff/security/advisories/new
 https://github.com/ZheMaxy/FlickOff/issues/new
+# The website's own pages are checked by Tests/Integration/site_test.py, and deploy after this runs.
+https://zhemaxy.github.io/

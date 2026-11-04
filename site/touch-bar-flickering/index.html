@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Touch Bar flickering: what to try on a MacBook Pro</title>
+<meta name="description" content="A MacBook Pro Touch Bar that flickers or flashes in dim light: how to check if low brightness is the trigger, what to try first, and when to get it serviced.">
+<link rel="canonical" href="https://zhemaxy.github.io/FlickOff/touch-bar-flickering/">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../icon.png">
+<link rel="stylesheet" href="../style.css">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FlickOff">
+<meta property="og:title" content="Touch Bar flickering: what to try on a MacBook Pro">
+<meta property="og:description" content="How to check if low brightness is the trigger, what to try first, and when to get it serviced.">
+<meta property="og:url" content="https://zhemaxy.github.io/FlickOff/touch-bar-flickering/">
+<meta property="og:image" content="https://zhemaxy.github.io/FlickOff/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="FlickOff: Touch Bar brightness control and display off for Apple silicon MacBook Pro">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Touch Bar flickering: what to try on a MacBook Pro",
+  "description": "A MacBook Pro Touch Bar that flickers or flashes in dim light: how to check if low brightness is the trigger, what to try first, and when to get it serviced.",
+  "image": "https://zhemaxy.github.io/FlickOff/social-preview.png",
+  "datePublished": "2026-11-04",
+  "dateModified": "2026-11-04",
+  "author": {"@type": "Person", "name": "ZheMaxy", "url": "https://github.com/ZheMaxy"},
+  "mainEntityOfPage": "https://zhemaxy.github.io/FlickOff/touch-bar-flickering/"
+}
+</script>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../favicon.png" width="28" height="28" alt="">FlickOff</a>
+    <nav>
+      <a href="./">Flickering guide</a>
+      <a href="../turn-off-touch-bar/">Turn it off</a>
+      <a href="https://github.com/ZheMaxy/FlickOff">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article>
+    <h1>Touch Bar flickering: what to try on a MacBook Pro</h1>
+    <p class="lead">A Touch Bar that flickers, flashes or blinks often does it in a dim room, when the strip lowers its own brightness. The rest of the Mac works fine. macOS has no brightness setting for the Touch Bar, and there's no confirmed fix, so here is what's worth trying, from the least to the most drastic.</p>
+
+    <h2>First, check whether low brightness is the trigger</h2>
+    <p>Wait until it flickers, then shine a light, such as your phone's, at the top of the screen near the camera, where the ambient light sensor is. One owner of a 13-inch MacBook Pro <a href="https://discussions.apple.com/thread/255385261">reports</a> that it's worse in dim light and that light on the sensor stops it immediately.</p>
+    <p>If yours reacts the same way, the panel misbehaves at low brightness and is steady higher up, which is the case a fixed brightness can help with. If it flashes in bright light too, skip to getting it checked.</p>
+
+    <h2>What to try</h2>
+    <h3>1. Update macOS and restart</h3>
+    <p>It costs nothing, and it rules out a one-off glitch. Don't expect much if it has been flickering for weeks.</p>
+
+    <h3>2. Restart the Touch Bar's service</h3>
+    <p>This command stops the process that runs the Touch Bar, and macOS starts it again:</p>
+    <pre><code>sudo pkill TouchBarServer</code></pre>
+    <p>Owners use this as a <a href="https://discussions.apple.com/thread/256220683">short-term workaround</a>, so expect the flicker to come back.</p>
+
+    <h3>3. On an Intel model, reset the SMC and NVRAM</h3>
+    <p>This is the usual advice <a href="https://discussions.apple.com/thread/255385261">in Apple's forums</a> for Intel Macs, with mixed results. Apple silicon Macs don't have these resets to perform.</p>
+
+    <h3>4. Keep the Touch Bar out of low brightness</h3>
+    <p>This is what <a href="../">FlickOff</a> is for, on Apple silicon. Choose <strong>Manual</strong> and a level high enough to stay steady, separately from the screen, and set <strong>When idle</strong> so it turns off instead of dimming into the range that flickers. It started with an M1 MacBook Pro that flickers at low brightness but not at a higher fixed level. Whether yours behaves the same, only trying it can tell.</p>
+
+    <h3>5. Turn its display off</h3>
+    <p>If no level is comfortable, and you can live without seeing it, you can <a href="../turn-off-touch-bar/">turn off the Touch Bar's display</a> and keep Touch ID.</p>
+
+    <h3>6. Get it checked</h3>
+    <p>A software workaround can't repair a failing panel. If it flashes at every brightness, or if it gets worse, <a href="https://support.apple.com/mac/repair">Apple's repair options</a> are the next step, and you can ask for a free diagnostic first. One owner reports that the flicker stopped after a battery service, so it's also worth checking whether yours is flagged for service in System Settings.</p>
+
+    <h2>Questions</h2>
+    <h3>Is Touch Bar flickering a hardware problem?</h3>
+    <p>Nobody outside Apple can say for certain, and it may not always have the same cause. That raising the brightness can stop it points to the panel behaving badly at low output, but it doesn't prove the panel is failing, or that it won't get worse.</p>
+    <h3>Why can't I just lower or raise the Touch Bar's brightness in macOS?</h3>
+    <p>macOS manages it automatically and offers no slider for it. The brightness controls on the Touch Bar adjust the main screen. That's the gap FlickOff fills.</p>
+    <h3>Will a brighter Touch Bar burn in?</h3>
+    <p>It's an OLED panel, so keeping it lit continuously raises the risk. Use the lowest level that stays steady, and let it turn off when idle.</p>
+    <h3>Does FlickOff work on my Intel MacBook Pro?</h3>
+    <p>No, it's for Apple silicon only. Steps 1 to 3 and 6 above still apply.</p>
+
+    <p class="actions"><a class="button" href="../">Get FlickOff</a> <a href="https://github.com/ZheMaxy/FlickOff/blob/main/docs/TROUBLESHOOTING.md">FlickOff troubleshooting</a></p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <p><a href="../">FlickOff</a> · <a href="https://github.com/ZheMaxy/FlickOff">Source on GitHub</a></p>
+    <p>Not affiliated with Apple. Touch Bar and MacBook Pro are trademarks of Apple Inc.</p>
+  </div>
+</footer>
+</body>
+</html>

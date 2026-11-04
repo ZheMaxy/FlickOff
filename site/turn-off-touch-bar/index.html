@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to turn off the Touch Bar on a MacBook Pro</title>
+<meta name="description" content="macOS has no switch to turn off the Touch Bar. Here are three ways to get a dark strip, and what each one does to touch input, Touch ID and your keys.">
+<link rel="canonical" href="https://zhemaxy.github.io/FlickOff/turn-off-touch-bar/">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../icon.png">
+<link rel="stylesheet" href="../style.css">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="FlickOff">
+<meta property="og:title" content="How to turn off the Touch Bar on a MacBook Pro">
+<meta property="og:description" content="Three ways to get a dark strip, and what each one does to touch input, Touch ID and your keys.">
+<meta property="og:url" content="https://zhemaxy.github.io/FlickOff/turn-off-touch-bar/">
+<meta property="og:image" content="https://zhemaxy.github.io/FlickOff/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="FlickOff: Touch Bar brightness control and display off for Apple silicon MacBook Pro">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to turn off the Touch Bar on a MacBook Pro",
+  "description": "macOS has no switch to turn off the Touch Bar. Here are three ways to get a dark strip, and what each one does to touch input, Touch ID and your keys.",
+  "image": "https://zhemaxy.github.io/FlickOff/social-preview.png",
+  "datePublished": "2026-11-04",
+  "dateModified": "2026-11-04",
+  "author": {"@type": "Person", "name": "ZheMaxy", "url": "https://github.com/ZheMaxy"},
+  "mainEntityOfPage": "https://zhemaxy.github.io/FlickOff/turn-off-touch-bar/"
+}
+</script>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../favicon.png" width="28" height="28" alt="">FlickOff</a>
+    <nav>
+      <a href="../touch-bar-flickering/">Flickering guide</a>
+      <a href="./">Turn it off</a>
+      <a href="https://github.com/ZheMaxy/FlickOff">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article>
+    <h1>How to turn off the Touch Bar on a MacBook Pro</h1>
+    <p class="lead">macOS has no switch that turns the Touch Bar off. There are three ways to get a dark strip, and they differ in whether the display is really off, whether touches still do anything, and how long it lasts.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Way</th><th>What you see</th><th>Touches</th><th>Lasts</th></tr></thead>
+        <tbody>
+          <tr><td><a href="#settings">Empty it in System Settings</a></td><td>A black bar with no buttons</td><td>Nothing to tap</td><td>Until you change it back</td></tr>
+          <tr><td><a href="#service">Stop its service</a></td><td>Off</td><td>Untested here</td><td>Until sleep, logout or restart, at best</td></tr>
+          <tr><td><a href="#flickoff">FlickOff's Off mode</a></td><td>Off, and it goes dark again if macOS wakes it</td><td>Keep working, invisibly</td><td>While the app runs</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>If what you're after is an end to flickering, read <a href="../touch-bar-flickering/">what to try when a Touch Bar flickers</a> first. You may be able to keep using it.</p>
+
+    <h2 id="settings">Empty it in System Settings</h2>
+    <p>This needs no app. It removes everything from the Touch Bar, <a href="https://www.idownloadblog.com/2023/03/09/how-to-disable-touch-bar-macbook-pro/">as iDownloadBlog describes</a>:</p>
+    <ol>
+      <li>Open <strong>System Settings → Keyboard → Touch Bar Settings</strong>.</li>
+      <li>Set <strong>Touch Bar shows</strong> to <strong>Quick Actions</strong>, and turn off <strong>Show Control Strip</strong>.</li>
+      <li>Set the option for pressing and holding the fn key to <strong>Show Quick Actions</strong>, turn off <strong>Show typing suggestions</strong>, and click <strong>Done</strong>.</li>
+      <li>If Quick Actions still appear, go to <strong>Privacy &amp; Security → Extensions → Touch Bar Quick Actions</strong> and uncheck everything.</li>
+    </ol>
+    <p>You lose Esc, the function keys, and the brightness and volume controls. And because this only removes what's drawn on the panel, don't count on it to stop a panel that flickers. The names of these settings can vary between macOS versions.</p>
+
+    <h2 id="service">Stop its service</h2>
+    <p><a href="https://discussions.apple.com/thread/256220683">Owners have scripted this</a> with these commands:</p>
+    <pre><code>sudo pkill TouchBarServer
+pkill ControlStrip</code></pre>
+    <p>macOS starts them again, so it doesn't stick: expect it back after sleep, logout or a restart, and possibly sooner. Stopping system processes also isn't something macOS expects you to do. It's a quick experiment rather than a setup to live with.</p>
+
+    <h2 id="flickoff">FlickOff's Off mode</h2>
+    <p><a href="../">FlickOff</a> asks the Touch Bar's own service to turn the panel off, the way it does when idle, and turns it off again if something wakes it. Short flashes are still possible when that happens. It works from the menu bar, needs no administrator access, and comes back when you quit the app.</p>
+    <p class="note"><strong>Touch input stays active,</strong> so the invisible keys still respond if you brush against them. Touch ID keeps working. If you need a Touch Bar that ignores touches completely, this doesn't do that.</p>
+    <p>FlickOff is for Apple silicon MacBook Pro. It's tested on the 13-inch M1 model, the M2 model isn't verified, and Intel models aren't supported.</p>
+
+    <h2>Turn it off only when you're not using it</h2>
+    <p>If you still want the Touch Bar while you work, FlickOff can leave it on and turn it off after 1, 5 or 15 minutes without keyboard or mouse input. It lights again when you come back. This also spares the OLED, which keeping it lit around the clock doesn't.</p>
+
+    <h2>Questions</h2>
+    <h3>Can I remove or fully disable the Touch Bar?</h3>
+    <p>Not with a setting. The ways above hide it or turn off its display. Touch ID is a separate sensor, and it keeps working in FlickOff's Off mode.</p>
+    <h3>What about Esc and the function keys?</h3>
+    <p>You can have them on the Touch Bar only while it's showing something, so with it emptied they're gone. In FlickOff's Off mode they still respond, but you have to find them by feel. An external keyboard solves this.</p>
+    <h3>Will it come back after a restart?</h3>
+    <p>With the settings it stays empty. With FlickOff, launch at login puts your choice back after you log in.</p>
+
+    <p class="actions"><a class="button" href="../">Get FlickOff</a> <a href="https://github.com/ZheMaxy/FlickOff/blob/main/docs/TROUBLESHOOTING.md#touch-bar-turns-back-on-after-selecting-off">If it turns back on</a></p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <p><a href="../">FlickOff</a> · <a href="https://github.com/ZheMaxy/FlickOff">Source on GitHub</a></p>
+    <p>Not affiliated with Apple. Touch Bar and MacBook Pro are trademarks of Apple Inc.</p>
+  </div>
+</footer>
+</body>
+</html>

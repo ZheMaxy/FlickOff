@@ -88,6 +88,8 @@ def main():
         text = publish.rewrite_links(f'[Download FlickOff-1.1.0-arm64.dmg]({link}) and [all](https://x/releases)', 'v1.2.0-beta.1', '1.2.0')
         assert text == ('[Download FlickOff-1.2.0-arm64.dmg](https://github.com/ZheMaxy/FlickOff/releases/download/'
                         'v1.2.0-beta.1/FlickOff-1.2.0-arm64.dmg) and [all](https://x/releases)')
+        page = publish.rewrite_links('"softwareVersion": "1.1.0", "x"', 'v1.2.0-beta.1', '1.2.0')
+        assert page == '"softwareVersion": "1.2.0", "x"'
         cask = publish.rewrite_cask((ROOT / 'Casks/flickoff.rb').read_text(), 'v1.2.0-beta.1', '1.2.0', 'f' * 64)
         assert 'version "1.2.0"' in cask and f'sha256 "{"f" * 64}"' in cask
         assert 'releases/download/v1.2.0-beta.1/FlickOff-#{version}-arm64.zip' in cask

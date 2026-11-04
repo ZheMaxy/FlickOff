@@ -59,7 +59,8 @@ to set up the copy, again from Sparkle to replace it, and once more to delete it
 `python3 Tests/Integration/release_checks_test.py` checks the guards in
 `make_release.py`, the rewriting in `publish.py` and the feed check. It needs no
 signing key and runs in CI. So does `python3 Tests/Integration/hooks_test.py`, which
-checks what the repository hooks let through.
+checks what the repository hooks let through, and `python3 Tests/Integration/site_test.py`,
+which checks what search engines read on the website.
 
 ## All at once
 

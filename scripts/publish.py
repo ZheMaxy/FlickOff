@@ -3,7 +3,7 @@
 
 upload  checks the files CI built and attested, signs them with the Keychain key and uploads
         them as a public release. Nobody is offered them yet.
-feed    publishes the signed feed, the Homebrew cask and the download links on main.
+feed    publishes the signed feed, the Homebrew cask and the download links on main and on the website.
         This is the step that reaches users.
 """
 import argparse
@@ -22,6 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = 'ZheMaxy/FlickOff'
 FEED_URL = f'https://raw.githubusercontent.com/{REPOSITORY}/main/appcast.xml'
+LINKS_TO_THE_RELEASE = ('README.md', 'docs/INSTALL.md', 'site/index.html')
 SPARKLE = 'http://www.andymatuschak.org/xml-namespaces/sparkle'
 
 
@@ -33,6 +34,7 @@ def rewrite_links(text, tag, version):
     """Point the download links in a document at this release."""
     text = re.sub(r'releases/download/[^/\s]+/FlickOff-[0-9.]+-arm64\.dmg',
                   f'releases/download/{tag}/FlickOff-{version}-arm64.dmg', text)
+    text = re.sub(r'"softwareVersion": "[^"]+"', f'"softwareVersion": "{version}"', text)
     return re.sub(r'\[Download FlickOff-[0-9.]+-arm64\.dmg\]', f'[Download FlickOff-{version}-arm64.dmg]', text)
 
 
@@ -104,12 +106,12 @@ def feed(args):
         shutil.copyfile(ROOT / 'appcast.xml', previous)
         print(run('swift', 'scripts/verify_feed.swift', signed.resolve(), 'Resources/Info.plist', '--archives', '--newer-than', previous), flush=True)
     shutil.copyfile(signed, ROOT / 'appcast.xml')
-    for name in ('README.md', 'docs/INSTALL.md'):
+    for name in LINKS_TO_THE_RELEASE:
         path = ROOT / name
         path.write_text(rewrite_links(path.read_text(), tag, version))
     cask = ROOT / 'Casks/flickoff.rb'
     cask.write_text(rewrite_cask(cask.read_text(), tag, version, sha256))
-    run('git', 'add', 'appcast.xml', 'README.md', 'docs/INSTALL.md', 'Casks/flickoff.rb')
+    run('git', 'add', 'appcast.xml', *LINKS_TO_THE_RELEASE, 'Casks/flickoff.rb')
     run('git', 'commit', '-m', f'Publish signed update feed for build {build}')
     run('git', 'push', 'origin', 'HEAD:main')
     # The raw content CDN can lag a push by a few minutes.
