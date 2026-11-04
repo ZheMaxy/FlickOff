@@ -13,8 +13,9 @@ on:
 permissions:
   contents: read
 
+# A newer push replaces an older one, but must not cancel a scheduled or manual run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
